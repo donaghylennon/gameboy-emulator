@@ -96,6 +96,17 @@ private:
     void push();
     void pop();
 
+    void rla();
+    void rlca();
+    void rra();
+    void rrca();
+
+    void jp_imm();
+    void jp_hl();
+    void jp_c_imm();
+
+    bool check_condition(uint8_t code);
+
     uint8_t& get_reg_by_index(unsigned index);
     uint8_t read_reg(unsigned index);
     void write_reg(unsigned index, uint8_t data);

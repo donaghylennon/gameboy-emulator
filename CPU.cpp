@@ -115,8 +115,16 @@ void CPU::fetch_next_instr() {
         case 0x30:
             if ((instr & 0x7) == 0x6)
                 load_r_imm();
-            if ((instr & 0x0F) == 0x3)
+            else if ((instr & 0x0F) == 0x3)
                 inc_rr();
+            else if (instr == 0x07)
+                rlca();
+            else if (instr == 0x17)
+                rla();
+            else if (instr == 0x0F)
+                rrca();
+            else if (instr == 0x1F)
+                rra();
             break;
         case 0x40:
         case 0x50:
@@ -137,7 +145,11 @@ void CPU::fetch_next_instr() {
         case 0xE0:
         case 0xF0:
             if ((instr & 0x7) == 0x6)
-                ;
+                alu_imm();
+            else if (instr == 0xC3)
+                jp_imm();
+            else if (instr == 0xE9)
+                jp_hl();
             break;
     }
     pc++;
@@ -592,6 +604,72 @@ void CPU::pop() {
         case 0xF1:
             memory.write(++sp, registers16(AF));
             break;
+    }
+}
+
+void CPU::rla() {
+    uint8_t high_bit = (registers[A] & 0x80);
+    registers[A] = (registers[A] << 1) | ((registers[F] & F_CARRY_MASK) ? 1 : 0);
+    registers[F] = high_bit << 1;
+}
+
+void CPU::rlca() {
+    uint8_t high_bit = (registers[A] & 0x80);
+    registers[A] = (registers[A] << 1) | (high_bit ? 1 : 0);
+    registers[F] = high_bit << 1;
+}
+
+void CPU::rra() {
+    uint8_t low_bit = (registers[A] & 0x01);
+    registers[A] = (registers[A] >> 1) | ((registers[F] & F_CARRY_MASK) ? 0x80 : 0);
+    registers[F] = low_bit << F_CARRY_SHIFT;
+}
+
+void CPU::rrca() {
+    uint8_t low_bit = (registers[A] & 0x01);
+    registers[A] = (registers[A] >> 1) | (low_bit ? 0x80 : 0);
+    registers[F] = low_bit << F_CARRY_SHIFT;
+}
+
+void CPU::jp_imm() {
+    pc = concat_bytes(memory.read(++pc), memory.read(++pc));
+}
+
+void CPU::jp_hl() {
+    pc = registers16(HL);
+}
+
+void CPU::jp_c_imm() {
+    uint8_t instr = memory.read(pc);
+    uint16_t address = concat_bytes(memory.read(++pc), memory.read(++pc));
+    if (check_condition(instr))
+        pc = address;
+}
+
+bool CPU::check_condition(uint8_t instr) {
+    switch (instr) {
+        case 0x20:
+        case 0xC0:
+        case 0xC2:
+        case 0xC4:
+            return !(registers[F] & F_ZERO_MASK);
+        case 0x30:
+        case 0xD0:
+        case 0xD2:
+        case 0xD4:
+            return !(registers[F] & F_CARRY_MASK);
+        case 0x28:
+        case 0xC8:
+        case 0xCA:
+        case 0xCC:
+            return registers[F] & F_ZERO_MASK;
+        case 0x38:
+        case 0xD8:
+        case 0xDA:
+        case 0xDC:
+            return registers[F] & F_CARRY_MASK;
+        default:
+            return false;
     }
 }
 
