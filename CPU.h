@@ -63,8 +63,22 @@ private:
 
     void load_r_r();
     void load_r_imm();
+    void load_mem_from_reg_r();
+    void load_r_mem_from_reg();
+    void load_mem_from_imm_r();
+    void load_r_mem_from_imm();
+
+    void load_mem_r(uint16_t address);
+    void load_r_mem(uint16_t address);
+
+    void load_rr_imm();
+    void load_mem_from_imm_sp();
+    void load_sp_hl();
+    void load_hl_sp_plus_simm();
+
     void alu_r();
     void alu_imm();
+
     void alu_add(uint8_t operand);
     void alu_adc(uint8_t operand);
     void alu_sub(uint8_t operand);
@@ -73,11 +87,22 @@ private:
     void alu_xor(uint8_t operand);
     void alu_or(uint8_t operand);
     void alu_cp(uint8_t operand);
+
+    void inc_rr();
+    void inc_r();
+    void dec_rr();
+    void dec_r();
+
+    void push();
+    void pop();
+
     uint8_t& get_reg_by_index(unsigned index);
     uint8_t read_reg(unsigned index);
     void write_reg(unsigned index, uint8_t data);
     inline unsigned left_reg_index(uint8_t instr);
     inline unsigned right_reg_index(uint8_t instr);
+    
+    inline uint16_t concat_bytes(uint8_t lsb, uint8_t msb);
 
     void increment_timer();
 };

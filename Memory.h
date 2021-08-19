@@ -25,4 +25,8 @@ private:
     // Use with operator[] to disallow
     // writing but still give reference?
     uint8_t junk;
+    uint8_t timer_copy;
+    // Maybe make a wrapper around uint8_t
+    // and change the behaviour of when it's
+    // assigned to, to allow returning references to it?
 };
