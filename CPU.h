@@ -43,16 +43,14 @@ private:
     uint16_t sp;
     uint16_t pc;
 
+    uint8_t instruction;
+
     uint8_t registers[8];
     uint16_t& registers16(unsigned index);
 
     Memory memory;
-    uint8_t rom[0x7fff];
-    uint8_t temp_memory[0x10000];
-    uint8_t joypad_reg;
-    uint8_t serial_regs[2] = {0};
-    uint8_t timer_regs[4] = {0};
-    uint8_t& get_mem(uint16_t address);
+    unsigned interrupt_delay = 0;
+    bool interrupt_enabled;
 
     unsigned wait_cycles = 0;
 
@@ -104,8 +102,19 @@ private:
     void jp_imm();
     void jp_hl();
     void jp_c_imm();
+    void jr_imm();
+    void jr_c_imm();
+    void call_imm();
+    void call_c_imm();
+    void ret();
+    void ret_c();
+    void reti();
+    void rst();
 
     bool check_condition(uint8_t code);
+
+    void ei();
+    void di();
 
     uint8_t& get_reg_by_index(unsigned index);
     uint8_t read_reg(unsigned index);
@@ -114,6 +123,4 @@ private:
     inline unsigned right_reg_index(uint8_t instr);
     
     inline uint16_t concat_bytes(uint8_t lsb, uint8_t msb);
-
-    void increment_timer();
 };
