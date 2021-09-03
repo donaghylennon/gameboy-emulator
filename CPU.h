@@ -18,7 +18,8 @@
 #define F_CARRY_SHIFT 4
 
 enum Registers8 {
-    B, C, D, E, H, L, A, F
+    //B, C, D, E, H, L, A, F
+    C, B, E, D, L, H, F, A
 };
 
 enum Registers16 {
@@ -46,16 +47,22 @@ private:
     uint8_t instruction;
 
     uint8_t registers[8];
+    //uint16_t registers[4];
     uint16_t& registers16(unsigned index);
+    uint8_t& registers8(unsigned index);
+    unsigned registers_order[8] = { B, C, D, E, H, L, A, F };
 
     Memory memory;
     unsigned interrupt_delay = 0;
-    bool interrupt_enabled;
+    bool interrupt_enabled = true;
+
+    bool halted = false;
 
     unsigned wait_cycles = 0;
 
     void debug_regs_default();
     void print_registers();
+    void print_registers16();
 
     void fetch_next_instr();
 
@@ -86,6 +93,9 @@ private:
     void alu_or(uint8_t operand);
     void alu_cp(uint8_t operand);
 
+    void add_rr();
+    void add_sp_imm();
+
     void inc_rr();
     void inc_r();
     void dec_rr();
@@ -98,6 +108,20 @@ private:
     void rlca();
     void rra();
     void rrca();
+
+    void cb_instruction();
+
+    void rlc_r();
+    void rrc_r();
+    void rl_r();
+    void rr_r();
+    void sla_r();
+    void sra_r();
+    void swap_r();
+    void srl_r();
+    void bit();
+    void res();
+    void set();
 
     void jp_imm();
     void jp_hl();
@@ -115,6 +139,14 @@ private:
 
     void ei();
     void di();
+
+    void halt();
+
+    void cpl();
+    void ccf();
+    void scf();
+
+    void daa();
 
     uint8_t& get_reg_by_index(unsigned index);
     uint8_t read_reg(unsigned index);

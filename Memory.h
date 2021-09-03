@@ -3,6 +3,9 @@
 #include <cstdint>
 #include <string>
 #include <fstream>
+#include <iostream>
+
+#define F_TRANSFER_ST_MASK 0x80
 
 class Memory {
 public:
@@ -21,6 +24,12 @@ private:
     uint8_t joypad_reg;
     uint8_t serial_regs[2];
     uint8_t timer_regs[4];
+    uint8_t sound_regs[0x17];
+    uint8_t waveform_ram[0x10];
+    uint8_t lcd_regs[0xC];
+    uint8_t interrupt_flag;
+    uint8_t interrupt_enable;
+    uint8_t high_ram[0x7F];
 
     // Use with operator[] to disallow
     // writing but still give reference?
