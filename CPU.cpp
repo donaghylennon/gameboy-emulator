@@ -33,6 +33,12 @@ void CPU::run() {
         if (dt > CYCLE_TIME) {
             prev_cycle = current_time;
 
+            if (ppu_delay == 0) {
+                // run ppu
+            } else {
+                ppu_delay--;
+            }
+
             if (wait_cycles) {
                 wait_cycles--;
             } else {
@@ -55,6 +61,16 @@ void CPU::run() {
         //    serial_regs[0] = 0;
         //    serial_regs[1] = serial_regs[1] & 0x7f;
         //}
+
+        SDL_Event event;
+        while(SDL_PollEvent(&event)) {
+            switch(event.type) {
+                case SDL_QUIT:
+                    running = false;
+                    SDL_Quit();
+                    break;
+            }
+        }
     }
 }
 

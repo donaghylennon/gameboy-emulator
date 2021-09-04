@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Memory.h"
+#include "PPU.h"
 
 #include <cstdint>
 #include <fstream>
@@ -53,6 +54,8 @@ private:
     unsigned registers_order[8] = { B, C, D, E, H, L, A, F };
 
     Memory memory;
+    PPU ppu = PPU(memory);
+    unsigned ppu_delay = 0;
     unsigned interrupt_delay = 0;
     bool interrupt_enabled = true;
 
