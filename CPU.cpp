@@ -26,17 +26,13 @@ void CPU::run() {
 
     while (running) {
         auto current_time = std::chrono::high_resolution_clock::now();
-        float dt = std::chrono::duration<float, std::chrono::milliseconds::period>(
+        float dt = std::chrono::duration<float, std::chrono::microseconds::period>(
             current_time - prev_cycle
         ).count();
 
         if (dt > CYCLE_TIME) {
-            //debug_regs_default();
-            
             prev_cycle = current_time;
 
-            //if (pc >= 0x17f -0x40 + 10)
-            //    break;
             if (wait_cycles) {
                 wait_cycles--;
             } else {
@@ -52,8 +48,6 @@ void CPU::run() {
                 if (!--interrupt_delay)
                     interrupt_enabled = true;
             }
-
-            //print_registers();
         }
 
         //if (serial_regs[1] & 0x80) {
