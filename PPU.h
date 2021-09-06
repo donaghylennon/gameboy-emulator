@@ -23,10 +23,13 @@ public:
 
     void run_line();
     void fetch_tile_row();
+
+    void draw_line();
 private:
     SDL_Window *window;
     SDL_Renderer *renderer;
     SDL_Texture *texture;
+    uint32_t draw_buffer[160*144] = {};
     Memory& memory;
     unsigned display_scale = 3;
     std::queue<uint32_t> background_fifo;

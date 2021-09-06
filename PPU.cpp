@@ -5,7 +5,7 @@ PPU::PPU(Memory& memory) : memory(memory) {
             160*display_scale, 144*display_scale, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888,
-            SDL_TEXTUREACCESS_STREAMING, 160*display_scale, 144*display_scale);
+            SDL_TEXTUREACCESS_STREAMING, 160, 144);
 }
 
 PPU::~PPU() {
@@ -67,6 +67,7 @@ void PPU::run_line() {
     for (int i = 0; i < 20; i++) {
         fetch_tile_row();
     }
+    draw_line();
     current_line++;
 }
 
@@ -101,8 +102,20 @@ void PPU::fetch_tile_row() {
     fetcher_x++;
 }
 
+void PPU::draw_line() {
+    for (int i = 0; i < 160; i++) {
+        draw_buffer[current_line*160 + i] = background_fifo.front();
+        background_fifo.pop();
+    }
+
+    SDL_UpdateTexture(texture, nullptr, draw_buffer, 160*4);
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, texture, nullptr, nullptr);
+    SDL_RenderPresent(renderer);
+}
+
 void PPU::set_mode_flag() {
-    switch (state) {
+    switch (current_state) {
         case OAM_SCAN:
             memory.write(0xFF41, (memory.read(0xFF41) & 0xF8) & 2);
             break;

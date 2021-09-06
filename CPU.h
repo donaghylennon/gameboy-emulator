@@ -158,4 +158,6 @@ private:
     inline unsigned right_reg_index(uint8_t instr);
     
     inline uint16_t concat_bytes(uint8_t lsb, uint8_t msb);
+
+    void handle_interrupts();
 };

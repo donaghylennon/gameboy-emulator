@@ -45,6 +45,8 @@ void CPU::run() {
                 fetch_next_instr();
             }
 
+            ppu.run_cycle();
+
             //if (timer_counter++ == 256) {
             //    timer_counter = 0;
             //    memory.increment_divider();
@@ -1399,3 +1401,8 @@ inline unsigned CPU::right_reg_index(uint8_t instr) {
 //        // interrupt requested
 //    }
 //}
+
+void CPU::handle_interrupts() {
+    if (interrupt_enabled) {
+    }
+}

@@ -31,7 +31,7 @@ void Memory::write(unsigned address, uint8_t data) {
         timer_regs[0] = 0;
     else if (address >= 0xFF05 && address < 0xFF08)
         timer_regs[address - 0xFF04] = data;
-    else if (address == 0xF0FF)
+    else if (address == 0xFF0F)
         interrupt_flag = data;
     else if (address == 0xFFFF)
         interrupt_enable = data;
@@ -58,6 +58,8 @@ uint8_t Memory::read(unsigned address) {
         return serial_regs[address - 0xFF01];
     else if (address >= 0xFF04 && address < 0xFF08)
         ;
+    else if (address == 0xFF0F)
+        return interrupt_flag;
     else if (address < 0xFF27)
         return sound_regs[address - 0xFF10];
     else if (address < 0xFF40)
@@ -66,8 +68,6 @@ uint8_t Memory::read(unsigned address) {
         return 0x90;
     else if (address < 0xFF4C)
         return lcd_regs[address - 0xFF40];
-    else if (address == 0xF0FF)
-        return interrupt_flag;
     else if (address == 0xFFFF)
         return interrupt_enable;
 }
