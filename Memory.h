@@ -7,6 +7,12 @@
 
 #define F_TRANSFER_ST_MASK 0x80
 
+#define INT_VBLANK 0x1
+#define INT_LCDSTAT 0x2
+#define INT_TIMER 0x4
+#define INT_SERIAL 0x8
+#define INT_JOYPAD 0x10
+
 class Memory {
 public:
     void write(unsigned address, uint8_t data);
@@ -15,6 +21,7 @@ public:
     void increment_timer();
     void increment_divider();
     void load_rom(std::string rom_path);
+    void set_interrupt(unsigned type, bool value);
 private:
     uint8_t rom[0x8000];
     uint8_t vram[0x2000];

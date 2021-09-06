@@ -6,6 +6,10 @@
 
 #include <queue>
 
+#define HBLANK_SRC 0x8
+#define VBLANK_SRC 0x10
+#define OAM_SRC 0x20
+
 enum PpuState {
     OAM_SCAN, DRAWING, HBLANK, VBLANK
 };
@@ -30,10 +34,12 @@ private:
     uint32_t colours[4] = { 0x0, 0x55555555, 0xBBBBBBBB, 0xFFFFFFFF };
 
     PpuState current_state = OAM_SCAN;
-    unsigned oam_scan_counter = 80;
-    unsigned drawing_counter = 43;
-    unsigned hblank_counter = 51;
-    unsigned vblank_counter = 4560;
+    unsigned oam_scan_counter = 0;
+    unsigned drawing_counter = 0;
+    unsigned hblank_counter = 0;
+    unsigned vblank_counter = 0;
     unsigned current_line = 0;
     unsigned fetcher_x = 0;
+
+    void set_mode_flag();
 };

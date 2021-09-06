@@ -97,3 +97,10 @@ void Memory::load_rom(std::string rom_path) {
     auto rom_file = std::ifstream(rom_path);
     rom_file.read(reinterpret_cast<char*>(rom), 0x8000);
 }
+
+void Memory::set_interrupt(unsigned type, bool value) {
+    if (value)
+        write(0xFF0F, read(0xFF0F) | type);
+    else
+        write(0xFF0F, read(0xFF0F) & ~type);
+}

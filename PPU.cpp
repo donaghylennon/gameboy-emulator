@@ -21,6 +21,7 @@ void PPU::run_cycle() {
             if (oam_scan_counter == 80) {
                 oam_scan_counter = 0;
                 current_state = DRAWING;
+                set_mode_flag();
             }
         } else if (current_state == DRAWING) {
             if (drawing_counter == 0)
@@ -29,6 +30,9 @@ void PPU::run_cycle() {
             if (drawing_counter == 43) {
                 drawing_counter = 0;
                 current_state = HBLANK;
+                memory.set_interrupt(INT_LCDSTAT, true);
+                memory.write(0xFF41, memory.read(0xFF41) | HBLANK_SRC);
+                set_mode_flag();
             }
         } else if (current_state == HBLANK) {
             hblank_counter++;
@@ -36,15 +40,25 @@ void PPU::run_cycle() {
                 hblank_counter = 0;
                 if (current_line == 143) {
                     current_state = VBLANK;
+                    memory.set_interrupt(INT_VBLANK, true);
+                    memory.set_interrupt(INT_LCDSTAT, true);
+                    memory.write(0xFF41, memory.read(0xFF41) | VBLANK_SRC);
+                    set_mode_flag();
                     current_line = 0;
                 } else {
                     current_state = OAM_SCAN;
+                    memory.set_interrupt(INT_LCDSTAT, true);
+                    memory.write(0xFF41, memory.read(0xFF41) | OAM_SRC);
+                    set_mode_flag();
                 }
             }
         } else if (current_state == VBLANK) {
-            vblank_counter--;
-            if (vblank_counter == 0)
+            vblank_counter++;
+            if (vblank_counter == 4560)
                 current_state = OAM_SCAN;
+                memory.set_interrupt(INT_LCDSTAT, true);
+                memory.write(0xFF41, memory.read(0xFF41) | OAM_SRC);
+                set_mode_flag();
         }
     }
 }
@@ -85,4 +99,21 @@ void PPU::fetch_tile_row() {
     }
 
     fetcher_x++;
+}
+
+void PPU::set_mode_flag() {
+    switch (state) {
+        case OAM_SCAN:
+            memory.write(0xFF41, (memory.read(0xFF41) & 0xF8) & 2);
+            break;
+        case DRAWING:
+            memory.write(0xFF41, (memory.read(0xFF41) & 0xF8) & 3);
+            break;
+        case HBLANK:
+            memory.write(0xFF41, (memory.read(0xFF41) & 0xF8) & 0);
+            break;
+        case VBLANK:
+            memory.write(0xFF41, (memory.read(0xFF41) & 0xF8) & 1);
+            break;
+    }
 }
