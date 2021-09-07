@@ -33,12 +33,19 @@ void Memory::write(unsigned address, uint8_t data) {
         timer_regs[address - 0xFF04] = data;
     else if (address == 0xFF0F)
         interrupt_flag = data;
+    else if (address == 0xFF50) {
+        boot_rom_reg = data;
+        boot_rom_enabled = false;
+    } else if (address < 0xFFFF)
+        ;
     else if (address == 0xFFFF)
         interrupt_enable = data;
 }
 
 uint8_t Memory::read(unsigned address) {
-    if (address < 0x8000)
+    if (boot_rom_enabled && address < 0x100)
+        return boot_rom[address];
+    else if (address < 0x8000)
         return rom[address];
     else if (address < 0xA000)
         return vram[address - 0x8000];
@@ -68,6 +75,8 @@ uint8_t Memory::read(unsigned address) {
         return 0x90;
     else if (address < 0xFF4C)
         return lcd_regs[address - 0xFF40];
+    else if (address == 0xFF50)
+        return boot_rom_reg;
     else if (address == 0xFFFF)
         return interrupt_enable;
 }
@@ -96,6 +105,11 @@ void Memory::increment_divider() {
 void Memory::load_rom(std::string rom_path) {
     auto rom_file = std::ifstream(rom_path);
     rom_file.read(reinterpret_cast<char*>(rom), 0x8000);
+}
+
+void Memory::load_boot_rom(std::string boot_rom_path) {
+    auto rom_file = std::ifstream(boot_rom_path);
+    rom_file.read(reinterpret_cast<char*>(boot_rom), 0x8000);
 }
 
 void Memory::set_interrupt(unsigned type, bool value) {

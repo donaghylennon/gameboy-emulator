@@ -4,6 +4,7 @@
 
 CPU::CPU(std::string rom_path) {
     memory.load_rom(rom_path);
+    memory.load_boot_rom("Resources/dmg_boot.bin");
 }
 
 void CPU::run() {
@@ -16,7 +17,7 @@ void CPU::run() {
     //        rom[0x100 + i++] = 0x0;
     //}
 
-    pc = 0x100;
+    pc = 0;
 
     auto prev_cycle = std::chrono::high_resolution_clock::now();
     unsigned timer_counter = 0;

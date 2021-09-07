@@ -21,8 +21,10 @@ public:
     void increment_timer();
     void increment_divider();
     void load_rom(std::string rom_path);
+    void load_boot_rom(std::string boot_rom_path);
     void set_interrupt(unsigned type, bool value);
 private:
+    uint8_t boot_rom[0x100];
     uint8_t rom[0x8000];
     uint8_t vram[0x2000];
     uint8_t external_ram[0x2000];
@@ -34,6 +36,7 @@ private:
     uint8_t sound_regs[0x17];
     uint8_t waveform_ram[0x10];
     uint8_t lcd_regs[0xC];
+    uint8_t boot_rom_reg;
     uint8_t interrupt_flag;
     uint8_t interrupt_enable;
     uint8_t high_ram[0x7F];
@@ -45,4 +48,6 @@ private:
     // Maybe make a wrapper around uint8_t
     // and change the behaviour of when it's
     // assigned to, to allow returning references to it?
+    
+    bool boot_rom_enabled = true;
 };
