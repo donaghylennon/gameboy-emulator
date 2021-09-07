@@ -421,6 +421,7 @@ void CPU::load_mem_from_reg_r() {
             break;
         case 0xE0:
             load_mem_r(memory.read(pc++) + 0xFF00);
+            break;
         case 0xE2:
             load_mem_r(registers8(C) + 0xFF00);
             break;
@@ -1026,8 +1027,8 @@ void CPU::rrca() {
 }
 
 void CPU::cb_instruction() {
-    uint8_t opcode = memory.read(pc++);
-    switch (opcode & 0xF8) {
+    instruction = memory.read(pc++);
+    switch (instruction & 0xF8) {
         case 0x00:
             rlc_r();
             break;
