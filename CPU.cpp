@@ -53,6 +53,8 @@ void CPU::run() {
             //    memory.increment_divider();
             //}
 
+            handle_interrupts();
+
             if (interrupt_delay) {
                 if (!--interrupt_delay)
                     interrupt_enabled = true;
@@ -1406,5 +1408,18 @@ inline unsigned CPU::right_reg_index(uint8_t instr) {
 
 void CPU::handle_interrupts() {
     if (interrupt_enabled) {
+        if ((memory.read(0xFFFF) & 0x1) && (memory.read(0xFF0F) & 0x1)) {
+            memory.write(0xFF0F, memory.read(0xFF0F) & ~0x1);
+            di();
+            memory.write(--sp, pc >> 8);
+            memory.write(--sp, pc & 0xFF);
+            pc = 0x40;
+        } else if ((memory.read(0xFFFF) & 0x2) && (memory.read(0xFF0F) & 0x2)) {
+            memory.write(0xFF0F, memory.read(0xFF0F) & ~0x2);
+            di();
+            memory.write(--sp, pc >> 8);
+            memory.write(--sp, pc & 0xFF);
+            pc = 0x48;
+        }
     }
 }
