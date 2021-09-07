@@ -69,7 +69,7 @@ uint8_t Memory::read(unsigned address) {
     else if (address >= 0xFF01 && address < 0xFF03)
         return serial_regs[address - 0xFF01];
     else if (address >= 0xFF04 && address < 0xFF08)
-        ;
+        return timer_regs[address - 0xFF04];
     else if (address == 0xFF0F)
         return interrupt_flag;
     else if (address < 0xFF27)
@@ -99,8 +99,10 @@ uint8_t& Memory::operator[](unsigned index) {
 
 void Memory::increment_timer() {
     // reset to value in mod reg on overflow
-    //if ((timer_regs[3] & 0x80) && timer_regs[1]++ == 0) 
-    //    timer_regs[1] = timer_regs[2];
+    if ((timer_regs[3] & 0x4) && ((++timer_regs[1]) == 0)) {
+        timer_regs[1] = timer_regs[2];
+        set_interrupt(INT_TIMER, true);
+    }
 }
 
 void Memory::increment_divider() {

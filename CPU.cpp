@@ -41,10 +41,15 @@ void CPU::run() {
 
             ppu.run_cycle();
 
-            //if (timer_counter++ == 256) {
-            //    timer_counter = 0;
-            //    memory.increment_divider();
-            //}
+            if (divider_counter++ == 256) {
+                divider_counter = 0;
+                memory.increment_divider();
+            }
+
+            if (timer_counter++ >= timer_control_values[memory.read(0xFF07) & 0x3]) {
+                timer_counter = 0;
+                memory.increment_timer();
+            }
 
             handle_interrupts();
 
@@ -1236,13 +1241,6 @@ inline unsigned CPU::right_reg_index(uint8_t instr) {
     return instr & 0x07;
 }
 
-//void CPU::increment_timer() {
-//    if (timer_regs[1]++ == 0) { // overflow
-//        timer_regs[1] = timer_regs[2];
-//        // interrupt requested
-//    }
-//}
-
 void CPU::handle_interrupts() {
     if (interrupt_enabled) {
         if ((memory.read(0xFFFF) & 0x1) && (memory.read(0xFF0F) & 0x1)) {
@@ -1257,6 +1255,12 @@ void CPU::handle_interrupts() {
             memory.write(--sp, pc >> 8);
             memory.write(--sp, pc & 0xFF);
             pc = 0x48;
+        } else if ((memory.read(0xFFFF) & 0x4) && (memory.read(0xFF0F) & 0x4)) {
+            memory.write(0xFF0F, memory.read(0xFF0F) & ~0x2);
+            di();
+            memory.write(--sp, pc >> 8);
+            memory.write(--sp, pc & 0xFF);
+            pc = 0x50;
         }
     }
 }

@@ -49,6 +49,10 @@ private:
     unsigned interrupt_delay = 0;
     bool interrupt_enabled = true;
 
+    unsigned divider_counter = 0;
+    unsigned timer_counter = 0;
+    unsigned timer_control_values[4] = { 1024, 16, 64, 256 };
+
     bool halted = false;
 
     unsigned wait_cycles = 0;
