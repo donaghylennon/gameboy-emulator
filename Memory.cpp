@@ -33,11 +33,17 @@ void Memory::write(unsigned address, uint8_t data) {
         timer_regs[address - 0xFF04] = data;
     else if (address == 0xFF0F)
         interrupt_flag = data;
+    else if (address < 0xFF27)
+        sound_regs[address - 0xFF10] = data;
+    else if (address < 0xFF40)
+        waveform_ram[address - 0xFF30] = data;
+    else if (address < 0xFF4C)
+        lcd_regs[address - 0xFF40] = data;
     else if (address == 0xFF50) {
         boot_rom_reg = data;
         boot_rom_enabled = false;
     } else if (address < 0xFFFF)
-        ;
+        high_ram[address - 0xFF80] = data;
     else if (address == 0xFFFF)
         interrupt_enable = data;
 }
@@ -71,12 +77,12 @@ uint8_t Memory::read(unsigned address) {
         return sound_regs[address - 0xFF10];
     else if (address < 0xFF40)
         return waveform_ram[address - 0xFF30];
-    else if (address == 0xFF44)
-        return 0x90;
     else if (address < 0xFF4C)
         return lcd_regs[address - 0xFF40];
     else if (address == 0xFF50)
         return boot_rom_reg;
+    else if (address < 0xFFFF)
+        return high_ram[address - 0xFF80];
     else if (address == 0xFFFF)
         return interrupt_enable;
 }
