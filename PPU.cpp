@@ -15,6 +15,8 @@ PPU::~PPU() {
 }
 
 void PPU::run_cycle() {
+    if (!(memory.read(0xFF40) & 0x80))
+        return;
     for (int i = 0; i < 4; i++) {
         if (current_state == OAM_SCAN) {
             oam_scan_counter++;
@@ -38,6 +40,7 @@ void PPU::run_cycle() {
             hblank_counter++;
             if (hblank_counter == 51) {
                 hblank_counter = 0;
+                current_line++;
                 if (current_line == 143) {
                     current_state = VBLANK;
                     memory.set_interrupt(INT_VBLANK, true);
@@ -54,11 +57,17 @@ void PPU::run_cycle() {
             }
         } else if (current_state == VBLANK) {
             vblank_counter++;
-            if (vblank_counter == 4560)
+            if ((vblank_counter % 456) == 0) {
+                memory.write(0xFF44, memory.read(0xFF44)+1);
+            }
+            if (vblank_counter == 4560) {
+                memory.write(0xFF44, 0);
+                vblank_counter = 0;
                 current_state = OAM_SCAN;
                 memory.set_interrupt(INT_LCDSTAT, true);
                 memory.write(0xFF41, memory.read(0xFF41) | OAM_SRC);
                 set_mode_flag();
+            }
         }
     }
 }
@@ -68,7 +77,7 @@ void PPU::run_line() {
         fetch_tile_row();
     }
     draw_line();
-    current_line++;
+    memory.write(0xFF44, memory.read(0xFF44)+1);
 }
 
 void PPU::fetch_tile_row() {
@@ -117,16 +126,16 @@ void PPU::draw_line() {
 void PPU::set_mode_flag() {
     switch (current_state) {
         case OAM_SCAN:
-            memory.write(0xFF41, (memory.read(0xFF41) & 0xF8) & 2);
+            memory.write(0xFF41, (memory.read(0xFF41) & 0xF8) | 2);
             break;
         case DRAWING:
-            memory.write(0xFF41, (memory.read(0xFF41) & 0xF8) & 3);
+            memory.write(0xFF41, (memory.read(0xFF41) & 0xF8) | 3);
             break;
         case HBLANK:
-            memory.write(0xFF41, (memory.read(0xFF41) & 0xF8) & 0);
+            memory.write(0xFF41, (memory.read(0xFF41) & 0xF8) | 0);
             break;
         case VBLANK:
-            memory.write(0xFF41, (memory.read(0xFF41) & 0xF8) & 1);
+            memory.write(0xFF41, (memory.read(0xFF41) & 0xF8) | 1);
             break;
     }
 }
