@@ -41,13 +41,8 @@ private:
     uint8_t interrupt_enable;
     uint8_t high_ram[0x7F];
 
-    // Use with operator[] to disallow
-    // writing but still give reference?
     uint8_t junk;
     uint8_t timer_copy;
-    // Maybe make a wrapper around uint8_t
-    // and change the behaviour of when it's
-    // assigned to, to allow returning references to it?
     
     bool boot_rom_enabled = true;
 };

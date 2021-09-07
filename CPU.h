@@ -19,7 +19,6 @@
 #define F_CARRY_SHIFT 4
 
 enum Registers8 {
-    //B, C, D, E, H, L, A, F
     C, B, E, D, L, H, F, A
 };
 
@@ -34,21 +33,12 @@ public:
 private:
     std::ifstream rom_file;
 
-    uint8_t reg_A;
-    uint8_t reg_F;
-    uint8_t reg_B;
-    uint8_t reg_C;
-    uint8_t reg_D;
-    uint8_t reg_E;
-    uint8_t reg_H;
-    uint8_t reg_L;
     uint16_t sp;
     uint16_t pc;
 
     uint8_t instruction;
 
     uint8_t registers[8];
-    //uint16_t registers[4];
     uint16_t& registers16(unsigned index);
     uint8_t& registers8(unsigned index);
     unsigned registers_order[8] = { B, C, D, E, H, L, A, F };
@@ -63,7 +53,6 @@ private:
 
     unsigned wait_cycles = 0;
 
-    void debug_regs_default();
     void print_registers();
     void print_registers16();
 

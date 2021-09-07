@@ -9,13 +9,6 @@ CPU::CPU(std::string rom_path) {
 
 void CPU::run() {
     int i = 0;
-    //for (; i < (0xbf-0x80+1); i++) {
-    //    rom[0x100+i] = 0x80+i;
-    //}
-    //for (int j = 0; j < 4; j++) {
-    //        rom[0x100 + i++] = 0x10*j + 0x6;
-    //        rom[0x100 + i++] = 0x0;
-    //}
 
     pc = 0;
 
@@ -61,12 +54,6 @@ void CPU::run() {
             }
         }
 
-        //if (serial_regs[1] & 0x80) {
-        //    std::cout << serial_regs[0];
-        //    serial_regs[0] = 0;
-        //    serial_regs[1] = serial_regs[1] & 0x7f;
-        //}
-
         SDL_Event event;
         while(SDL_PollEvent(&event)) {
             switch(event.type) {
@@ -84,23 +71,7 @@ uint16_t& CPU::registers16(unsigned index) {
 }
 
 uint8_t& CPU::registers8(unsigned index) {
-    //if (index % 2) {
-    //    return reinterpret_cast<uint8_t*>(registers)[index + 1];
-    //} else {
-    //    return reinterpret_cast<uint8_t*>(registers)[index - 1];
-    //}
     return registers[index];
-}
-
-void CPU::debug_regs_default() {
-    registers8(B) = 0x42;
-    registers8(C) = 0x43;
-    registers8(D) = 0x44;
-    registers8(E) = 0x45;
-    registers8(H) = 0x48;
-    registers8(L) = 0x4c;
-    registers8(A) = 0x41;
-    //registers8(F) = 0x46;
 }
 
 void CPU::print_registers() {
@@ -205,8 +176,6 @@ void CPU::fetch_next_instr() {
                     break;
                 case 0x4:
                     inc_r();
-                    //print_registers();
-                    //print_registers16();
                     break;
                 case 0x5:
                     dec_r();
@@ -339,10 +308,7 @@ void CPU::fetch_next_instr() {
                             jp_imm();
                             break;
                         case 0xC8:
-                            // CB instructions
-                            // skip for now
                             cb_instruction();
-                            //pc++;
                             break;
                         case 0xF0:
                             di();
@@ -370,43 +336,27 @@ void CPU::fetch_next_instr() {
             }
             break;
     }
-
-    //pc++;
 }
 
 void CPU::load_r_r() {
-    //std::cout << "Entering load_r_r" << std::endl;
     if ((instruction & 0x7) == 0x6) {
         get_reg_by_index(left_reg_index(instruction)) = memory.read(registers16(HL));
     } else if ((instruction & 0x38) == 0x30) {
         memory.write(registers16(HL), get_reg_by_index(right_reg_index(instruction)));
     } else {
-        //std::cout << "Reg to reg" << std::endl;
-        //std::cout << "Instruction: ";
-        //printf("%x\n", instruction);
-        //std::cout << "Left: " << left_reg_index(instruction) << std::endl;
-        //std::cout << "Right: " << right_reg_index(instruction) << std::endl;
         get_reg_by_index(left_reg_index(instruction)) = get_reg_by_index(right_reg_index(instruction));
     }
 }
 
 void CPU::load_r_imm() {
-    //std::cout << "Entering load_r_imm" << std::endl;
     uint8_t data = memory.read(pc++);
-        //std::cout << "Instruction: ";
-        //printf("%x\n", instruction);
-        //std::cout << "Data: ";
-        //printf("%x\n", data);
     if (instruction == 0x36)
         memory.write(registers16(HL), data);
     else
         get_reg_by_index(left_reg_index(instruction)) = data;
-
-        //std::cout << "Left: " << left_reg_index(instruction) << std::endl;
 }
 
 void CPU::load_mem_from_reg_r() {
-    
     // Use another array/method to map to real reg indexes?
     switch (instruction) {
         case 0x02:
@@ -456,18 +406,13 @@ void CPU::load_r_mem_from_reg() {
 
 // ********* change to inline function to get 16 bit and reduce number of functions
 void CPU::load_mem_from_imm_r() {
-    //uint8_t instr = memory.read(pc);
     uint8_t lsb = memory.read(pc++);
     uint8_t msb = memory.read(pc++);
 
-    //load_mem_r((msb << 8) | lsb);
     load_mem_r(concat_bytes(lsb, msb));
 }
 
 inline uint16_t CPU::concat_bytes(uint8_t lsb, uint8_t msb) {
-    //std::cout << "Concat: ";
-    //printf("lsb: %x msb: %x\n", lsb, msb);
-    //printf("final: %x\n", (msb << 8) | lsb);
     return (msb << 8) | lsb;
 }
 
@@ -475,7 +420,6 @@ void CPU::load_r_mem_from_imm() {
     uint8_t lsb = memory.read(pc++);
     uint8_t msb = memory.read(pc++);
 
-    //load_r_mem((msb << 8) & lsb);
     load_r_mem(concat_bytes(lsb, msb));
 }
 // ********************************************************************************
@@ -485,9 +429,7 @@ void CPU::load_mem_r(uint16_t address) {
 }
 
 void CPU::load_r_mem(uint16_t address) {
-    //printf("Loading from address: %x\n", address);
     registers8(A) = memory.read(address);
-    //printf("Register A result: %x\n", registers8(A));
 }
 
 void CPU::load_rr_imm() {
@@ -534,7 +476,6 @@ void CPU::load_hl_sp_plus_simm() {
 }
 
 void CPU::alu_r() {
-    //std::cout << "Entering alu_r" << std::endl;
     switch (instruction & 0xF8) {
         case 0x80:
             alu_add(get_reg_by_index(right_reg_index(instruction)));
@@ -594,7 +535,6 @@ void CPU::alu_imm() {
 }
 
 void CPU::alu_add(uint8_t operand) {
-    //std::cout << "Entering alu_add" << std::endl;
     uint8_t carry;
     uint8_t half_carry;
     uint8_t zero;
@@ -605,21 +545,6 @@ void CPU::alu_add(uint8_t operand) {
     
     zero = registers8(A) == 0 ? 1 : 0;
     registers8(F) = (zero << F_ZERO_SHIFT) | (half_carry << F_HALF_CARRY_SHIFT) | (carry << F_CARRY_SHIFT);
-    //uint16_t result = registers[A] + operand;
-    //if (result == 0)
-    //    registers[F] = registers[F] | 0x80;
-    //else 
-    //    registers[F] = registers[F] & 0x7F;
-
-    //registers[F] = registers[F] & ~0x40;
-
-    //if ((registers[A] & 0x8) && (operand & 0x8))
-    //    registers[F] = registers[F] | 0x20;
-
-    //if (result & 0x100)
-    //    registers[F] = registers[F] | 0x10;
-
-    //registers[A] = (uint8_t) result;
 }
 
 void CPU::alu_adc(uint8_t operand) {
@@ -646,7 +571,6 @@ void CPU::alu_sub(uint8_t operand) {
     uint8_t half_carry = 0;
 
     carry = registers8(A) < operand;
-    //half_carry = (registers[A] & 0xF) > 0xF - (operand & 0xF);
     if (((registers8(A) & 0xF) - (operand & 0xF)) & 0x10)
         half_carry = 1;
     registers8(A) -= operand;
@@ -671,16 +595,11 @@ void CPU::alu_sbc(uint8_t operand) {
 }
 
 void CPU::alu_and(uint8_t operand) {
-    //std::cout << "Entering and" << std::endl;
-    //printf("Reg A: %x\n", registers8(A));
-    //printf("Operand: %x\n", operand);
     uint8_t zero = 0;
     registers8(A) &= operand;
-    //printf("Reg A result: %x\n", registers8(A));
 
     zero = registers8(A) == 0 ? 1 : 0;
     registers8(F) = (zero << F_ZERO_SHIFT) | F_HALF_CARRY_MASK;
-    //printf("Reg F result: %x\n", registers8(F));
 }
 
 void CPU::alu_xor(uint8_t operand) {
@@ -692,8 +611,6 @@ void CPU::alu_xor(uint8_t operand) {
 }
 
 void CPU::alu_or(uint8_t operand) {
-    //print_registers();
-    //print_registers16();
     uint8_t zero = 0;
     registers8(A) |= operand;
 
@@ -702,10 +619,6 @@ void CPU::alu_or(uint8_t operand) {
 }
 
 void CPU::alu_cp(uint8_t operand) {
-    //std::cout << "Entering cp" << std::endl;
-    //printf("Operand: %x\n", operand);
-    //print_registers();
-    //print_registers16();
     uint8_t carry;
     uint8_t half_carry;
     uint8_t zero;
@@ -715,10 +628,6 @@ void CPU::alu_cp(uint8_t operand) {
     half_carry = (registers8(A) & 0xF) < (operand & 0xF) ? 1 : 0;
     zero = result == 0 ? 1 : 0;
     registers8(F) = (zero << F_ZERO_SHIFT) | F_NEG_MASK | (half_carry << F_HALF_CARRY_SHIFT) | (carry << F_CARRY_SHIFT);
-
-    //std::cout << "Leaving cp" << std::endl;
-    //print_registers();
-    //print_registers16();
 }
 
 void CPU::add_rr() {
@@ -847,35 +756,6 @@ void CPU::dec_rr() {
     }
 }
 
-//void CPU::dec_r() {
-//    switch (instruction) {
-//        case 0x05:
-//            registers[B]--;
-//            break;
-//        case 0x0D:
-//            registers[C]--;
-//            break;
-//        case 0x15:
-//            registers[D]--;
-//            break;
-//        case 0x1D:
-//            registers[E]--;
-//            break;
-//        case 0x25:
-//            registers[H]--;
-//            break;
-//        case 0x2D:
-//            registers[L]--;
-//            break;
-//        case 0x35:
-//            memory.write(registers16(HL), memory.read(registers16(HL)-1));
-//            break;
-//        case 0x3D:
-//            registers[A]--;
-//            break;
-//    }
-//}
-
 void CPU::dec_r() {
     uint8_t result;
     uint8_t half_carry = 0;
@@ -930,37 +810,20 @@ void CPU::dec_r() {
 void CPU::push() {
     switch (instruction) {
         case 0xC5:
-            //memory.write(--sp, registers16(BC));
             memory.write(--sp, registers8(B));
             memory.write(--sp, registers8(C));
-            //std::cout << "Pushing BC: ";
-            //printf("%x\n", registers16(BC));
             break;
         case 0xD5:
-            //memory.write(--sp, registers16(DE));
             memory.write(--sp, registers8(D));
             memory.write(--sp, registers8(E));
-            //std::cout << "Pushing DE: ";
-            //printf("%x\n", registers16(DE));
             break;
         case 0xE5:
-            //memory.write(--sp, registers16(HL));
             memory.write(--sp, registers8(H));
-            //printf("Wrote H to sp: %x\n", sp);
             memory.write(--sp, registers8(L));
-            //printf("Wrote L to sp: %x\n", sp);
-            //std::cout << "Pushing HL: ";
-            //printf("%x\n", registers16(HL));
-            //printf("H: %x ", registers8(H));
-            //printf("L: %x\n", registers8(L));
-            //printf("sp: %x\n", sp);
             break;
         case 0xF5:
-            //memory.write(--sp, registers16(AF));
             memory.write(--sp, registers8(A));
             memory.write(--sp, registers8(F));
-            //std::cout << "Pushing AF: ";
-            //printf("%x\n", registers16(AF));
             break;
     }
 }
@@ -968,38 +831,21 @@ void CPU::push() {
 void CPU::pop() {
     switch (instruction) {
         case 0xC1:
-            //registers16(BC) = memory.read(sp++);
             registers8(C) = memory.read(sp++);
             registers8(B) = memory.read(sp++);
-            //std::cout << "Popping BC: ";
-            //printf("%x\n", registers16(BC));
             break;
         case 0xD1:
-            //registers16(DE) = memory.read(sp++);
             registers8(E) = memory.read(sp++);
             registers8(D) = memory.read(sp++);
-            //std::cout << "Popping DE: ";
-            //printf("%x\n", registers16(DE));
             break;
         case 0xE1:
-            //registers16(HL) = memory.read(sp++);
-            //printf("Reading L from sp: %x\n", sp);
             registers8(L) = memory.read(sp++);
-            //printf("Reading H from sp: %x\n", sp);
             registers8(H) = memory.read(sp++);
-            //std::cout << "Popping HL: ";
-            //printf("%x\n", registers16(HL));
-            //printf("H: %x ", registers8(H));
-            //printf("L: %x\n", registers8(L));
-            //printf("sp: %x\n", sp);
             break;
         case 0xF1:
-            //registers16(AF) = memory.read(sp++);
             // Least significant nibble of F is always zero
             registers8(F) = memory.read(sp++) & 0xF0;
             registers8(A) = memory.read(sp++);
-            //std::cout << "Popping AF: ";
-            //printf("%x\n", registers16(AF));
             break;
     }
 }
@@ -1212,8 +1058,6 @@ void CPU::call_imm() {
     memory.write(--sp, pc >> 8);
     memory.write(--sp, pc & 0xFF);
     pc = concat_bytes(lsb, msb);
-    //std::cout << "Calling function at: ";
-    //printf("%x\n", pc);
 }
 
 void CPU::call_c_imm() {
@@ -1224,8 +1068,6 @@ void CPU::call_c_imm() {
         memory.write(--sp, pc >> 8);
         memory.write(--sp, pc & 0xFF);
         pc = address;
-        //std::cout << "Calling function at: ";
-        //printf("%x\n", pc);
     }
 }
 
@@ -1233,8 +1075,6 @@ void CPU::ret() {
     uint8_t lsb = memory.read(sp++);
     uint8_t msb = memory.read(sp++);
     pc = concat_bytes(lsb, msb);
-    //std::cout << "Returning to address: ";
-    //printf("%x\n", pc);
 }
 
 void CPU::ret_c() {
@@ -1242,8 +1082,6 @@ void CPU::ret_c() {
         uint8_t lsb = memory.read(sp++);
         uint8_t msb = memory.read(sp++);
         pc = concat_bytes(lsb, msb);
-        //std::cout << "Returning to address: ";
-        //printf("%x\n", pc);
     }
 }
 
@@ -1345,7 +1183,7 @@ void CPU::daa() {
     // simpler if you just gather all together and negate if N flag
     if (!(registers8(F) & F_NEG_MASK)) {
         uint8_t a_value = registers8(A);
-        if (registers8(A) > /*0x99*/0x9F || (registers8(F) & F_CARRY_MASK)) {
+        if (registers8(A) > 0x9F || (registers8(F) & F_CARRY_MASK)) {
             registers8(A) += 0x60;
             carry = 1;
         }
@@ -1354,7 +1192,6 @@ void CPU::daa() {
     } else {
         if (registers8(F) & F_CARRY_MASK) {
             registers8(A) -= 0x60;
-            //carry = 1;
         }
         if (registers8(F) & F_HALF_CARRY_MASK)
             registers8(A) -= 0x6;
@@ -1362,7 +1199,7 @@ void CPU::daa() {
 
     zero = (registers8(A) == 0);
 
-    registers8(F) = (registers8(F) & 0x50/*0x10*/) | (zero << F_ZERO_SHIFT) | (carry << F_CARRY_SHIFT);
+    registers8(F) = (registers8(F) & 0x50) | (zero << F_ZERO_SHIFT) | (carry << F_CARRY_SHIFT);
 }
 
 uint8_t& CPU::get_reg_by_index(unsigned index) {

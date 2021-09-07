@@ -2,7 +2,6 @@
 
 void Memory::write(unsigned address, uint8_t data) {
     if (address < 0x8000) {
-        //rom[address] = data;
         std::cout << "Error: Writing to rom" << std::endl;
         std::cout << "Address: ";
         printf("%x\n", address);
