@@ -476,7 +476,7 @@ void CPU::load_hl_sp_plus_simm() {
         half_carry = 1;
     // This might be off by one when op negative, since when operand negative 0xFFFF - 1 = 0
     carry = sp > ((0xFFFF - operand) & 0xFFFF);
-    registers16(HL) = sp + (int8_t) memory.read(pc++);
+    registers16(HL) = sp + (int8_t) operand;
     registers8(F) = (half_carry << F_HALF_CARRY_SHIFT) & (carry << F_CARRY_SHIFT);
 }
 
@@ -1256,7 +1256,7 @@ void CPU::handle_interrupts() {
             memory.write(--sp, pc & 0xFF);
             pc = 0x48;
         } else if ((memory.read(0xFFFF) & 0x4) && (memory.read(0xFF0F) & 0x4)) {
-            memory.write(0xFF0F, memory.read(0xFF0F) & ~0x2);
+            memory.write(0xFF0F, memory.read(0xFF0F) & ~0x4);
             di();
             memory.write(--sp, pc >> 8);
             memory.write(--sp, pc & 0xFF);
