@@ -33,10 +33,19 @@ void CPU::run() {
                 ppu_delay--;
             }
 
-            if (wait_cycles) {
-                wait_cycles--;
-            } else {
+            if (!wait_cycles) {
+                handle_interrupts();
+
                 fetch_next_instr();
+
+                if (!cb_prefixed)
+                    wait_cycles = cycle_table[instruction];
+                else {
+                    wait_cycles = cb_cycle_table[instruction];
+                    cb_prefixed = false;
+                }
+            } else {
+                wait_cycles--;
             }
 
             ppu.run_cycle();
@@ -50,8 +59,6 @@ void CPU::run() {
                 timer_counter = 0;
                 memory.increment_timer();
             }
-
-            handle_interrupts();
 
             if (interrupt_delay) {
                 if (!--interrupt_delay)
@@ -880,6 +887,7 @@ void CPU::rrca() {
 }
 
 void CPU::cb_instruction() {
+    cb_prefixed = true;
     instruction = memory.read(pc++);
     switch (instruction & 0xF8) {
         case 0x00:
