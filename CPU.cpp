@@ -864,13 +864,13 @@ void CPU::pop() {
 void CPU::rla() {
     uint8_t high_bit = (registers8(A) & 0x80);
     registers8(A) = (registers8(A) << 1) | ((registers8(F) & F_CARRY_MASK) ? 1 : 0);
-    registers8(F) = high_bit << 1;
+    registers8(F) = high_bit >> 3;
 }
 
 void CPU::rlca() {
     uint8_t high_bit = (registers8(A) & 0x80);
     registers8(A) = (registers8(A) << 1) | (high_bit ? 1 : 0);
-    registers8(F) = high_bit << 1;
+    registers8(F) = high_bit >> 3;
 }
 
 void CPU::rra() {
@@ -952,7 +952,7 @@ void CPU::rlc_r() {
     uint8_t high_bit = (reg & 0x80);
     reg = (reg << 1) | (high_bit ? 1 : 0);
     zero = reg == 0 ? 1 : 0;
-    registers8(F) = (zero << F_ZERO_SHIFT) | (high_bit << 1);
+    registers8(F) = (zero << F_ZERO_SHIFT) | (high_bit >> 3);
 }
 
 void CPU::rrc_r() {
@@ -969,7 +969,7 @@ void CPU::rl_r() {
     uint8_t high_bit = (reg & 0x80);
     reg = (reg << 1) | ((registers8(F) & F_CARRY_MASK) ? 1 : 0);
     zero = reg == 0 ? 1 : 0;
-    registers8(F) = (zero << F_ZERO_SHIFT) | (high_bit << 1);
+    registers8(F) = (zero << F_ZERO_SHIFT) | (high_bit >> 3);
 }
 
 void CPU::rr_r() {
@@ -987,7 +987,7 @@ void CPU::sla_r() {
     uint8_t high_bit = (reg & 0x80);
     reg = reg << 1;
     zero = reg == 0 ? 1 : 0;
-    registers8(F) = (zero << F_ZERO_SHIFT) | (high_bit << 1);
+    registers8(F) = (zero << F_ZERO_SHIFT) | (high_bit >> 3);
 }
 
 void CPU::sra_r() {
