@@ -39,14 +39,13 @@ void CPU::run() {
                 fetch_next_instr();
 
                 if (!cb_prefixed)
-                    wait_cycles = cycle_table[instruction];
+                    wait_cycles += cycle_table[instruction];
                 else {
-                    wait_cycles = cb_cycle_table[instruction];
+                    wait_cycles += cb_cycle_table[instruction];
                     cb_prefixed = false;
                 }
-            } else {
-                wait_cycles--;
             }
+            wait_cycles--;
 
             ppu.run_cycle();
 
@@ -1051,8 +1050,10 @@ void CPU::jp_c_imm() {
     uint8_t lsb = memory.read(pc++);
     uint8_t msb = memory.read(pc++);
     uint16_t address = concat_bytes(lsb, msb);
-    if (check_condition(instruction))
+    if (check_condition(instruction)) {
+        wait_cycles += 1;
         pc = address;
+    }
 }
 
 void CPU::jr_imm() {
@@ -1061,8 +1062,10 @@ void CPU::jr_imm() {
 
 void CPU::jr_c_imm() {
     int8_t offset = memory.read(pc++);
-    if (check_condition(instruction))
+    if (check_condition(instruction)) {
+        wait_cycles += 1;
         pc += offset;
+    }
 }
 
 void CPU::call_imm() {
@@ -1078,6 +1081,7 @@ void CPU::call_c_imm() {
     uint8_t msb = memory.read(pc++);
     uint16_t address = concat_bytes(lsb, msb);
     if (check_condition(instruction)) {
+        wait_cycles += 3;
         memory.write(--sp, pc >> 8);
         memory.write(--sp, pc & 0xFF);
         pc = address;
@@ -1092,6 +1096,7 @@ void CPU::ret() {
 
 void CPU::ret_c() {
     if(check_condition(instruction)) {
+        wait_cycles += 3;
         uint8_t lsb = memory.read(sp++);
         uint8_t msb = memory.read(sp++);
         pc = concat_bytes(lsb, msb);
