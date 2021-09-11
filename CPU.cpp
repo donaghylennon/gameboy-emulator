@@ -774,42 +774,42 @@ void CPU::dec_r() {
     uint8_t zero = 0;
     switch (instruction) {
         case 0x05:
-            half_carry = (registers8(B) & 0xF) == 0xF;
+            half_carry = (registers8(B) & 0xF) == 0x0;
             result = registers8(B) - 1;
             registers8(B)--;
             break;
         case 0x0D:
-            half_carry = (registers8(C) & 0xF) == 0xF;
+            half_carry = (registers8(C) & 0xF) == 0x0;
             result = registers8(C) - 1;
             registers8(C)--;
             break;
         case 0x15:
-            half_carry = (registers8(D) & 0xF) == 0xF;
+            half_carry = (registers8(D) & 0xF) == 0x0;
             result = registers8(D) - 1;
             registers8(D)--;
             break;
         case 0x1D:
-            half_carry = (registers8(E) & 0xF) == 0xF;
+            half_carry = (registers8(E) & 0xF) == 0x0;
             result = registers8(E) - 1;
             registers8(E)--;
             break;
         case 0x25:
-            half_carry = (registers8(H) & 0xF) == 0xF;
+            half_carry = (registers8(H) & 0xF) == 0x0;
             result = registers8(H) - 1;
             registers8(H)--;
             break;
         case 0x2D:
-            half_carry = (registers8(L) & 0xF) == 0xF;
+            half_carry = (registers8(L) & 0xF) == 0x0;
             result = registers8(L) - 1;
             registers8(L)--;
             break;
         case 0x35:
-            half_carry = (memory.read(registers16(HL)) & 0xF) == 0xF;
+            half_carry = (memory.read(registers16(HL)) & 0xF) == 0x0;
             result = registers16(HL) - 1;
             memory.write(registers16(HL), memory.read(registers16(HL)-1));
             break;
         case 0x3D:
-            half_carry = (registers8(A) & 0xF) == 0xF;
+            half_carry = (registers8(A) & 0xF) == 0x0;
             result = registers8(A) - 1;
             registers8(A)--;
             break;
