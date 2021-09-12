@@ -34,7 +34,7 @@ private:
     unsigned display_scale = 3;
     std::queue<uint32_t> background_fifo;
     std::queue<int> object_fifo;
-    uint32_t colours[4] = { 0x0, 0x55555555, 0xBBBBBBBB, 0xFFFFFFFF };
+    uint32_t colours[4] = { 0xFFFFFFFF, 0xBBBBBBFF, 0x555555FF, 0x000000FF };
 
     PpuState current_state = OAM_SCAN;
     unsigned oam_scan_counter = 0;
