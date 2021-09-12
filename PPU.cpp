@@ -41,7 +41,8 @@ void PPU::run_cycle() {
             if (hblank_counter == 51) {
                 hblank_counter = 0;
                 current_line++;
-                if (current_line == 143) {
+                if (current_line == 144) {
+                    memory.write(0xFF44, memory.read(0xFF44)+1);
                     current_state = VBLANK;
                     memory.set_interrupt(INT_VBLANK, true);
                     memory.set_interrupt(INT_LCDSTAT, true);
@@ -49,6 +50,7 @@ void PPU::run_cycle() {
                     set_mode_flag();
                     current_line = 0;
                 } else {
+                    memory.write(0xFF44, memory.read(0xFF44)+1);
                     current_state = OAM_SCAN;
                     memory.set_interrupt(INT_LCDSTAT, true);
                     memory.write(0xFF41, memory.read(0xFF41) | OAM_SRC);
@@ -77,7 +79,6 @@ void PPU::run_line() {
         fetch_tile_row();
     }
     draw_line();
-    memory.write(0xFF44, memory.read(0xFF44)+1);
 }
 
 void PPU::fetch_tile_row() {
