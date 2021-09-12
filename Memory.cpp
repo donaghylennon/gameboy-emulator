@@ -125,3 +125,15 @@ void Memory::set_interrupt(unsigned type, bool value) {
     else
         write(0xFF0F, read(0xFF0F) & ~type);
 }
+
+void Memory::dump_vram() {
+    printf("Dumping vram:\n");
+    for (int i = 0; i < 0x2000; i++) {
+        if ((i % 0x10) == 0 && i != 0) {
+            printf("\n");
+            printf("%x:  ", 0x8000+i);
+        }
+        printf("%x\t", vram[i]);
+    }
+    printf("\n");
+}

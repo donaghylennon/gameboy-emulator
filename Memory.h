@@ -23,6 +23,7 @@ public:
     void load_rom(std::string rom_path);
     void load_boot_rom(std::string boot_rom_path);
     void set_interrupt(unsigned type, bool value);
+    void dump_vram();
 private:
     uint8_t boot_rom[0x100];
     uint8_t rom[0x8000];
