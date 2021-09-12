@@ -54,7 +54,7 @@ void CPU::run() {
                 memory.increment_divider();
             }
 
-            if (timer_counter++ >= timer_control_values[memory.read(0xFF07) & 0x3]) {
+            if ((memory.read(0xFF07) & 0x4) && timer_counter++ >= timer_control_values[memory.read(0xFF07) & 0x3]) {
                 timer_counter = 0;
                 memory.increment_timer();
             }
