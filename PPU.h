@@ -23,6 +23,7 @@ public:
 
     void run_line();
     void fetch_tile_row();
+    void fetch_scanline();
 
     void draw_line();
 private:
@@ -45,4 +46,6 @@ private:
     unsigned fetcher_x = 0;
 
     void set_mode_flag();
+
+    unsigned bg_palette(unsigned index);
 };
