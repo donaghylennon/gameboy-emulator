@@ -127,16 +127,16 @@ void PPU::draw_line() {
 void PPU::set_mode_flag() {
     switch (current_state) {
         case OAM_SCAN:
-            memory.write(0xFF41, (memory.read(0xFF41) & 0xF8) | 2);
+            memory.write(0xFF41, (memory.read(0xFF41) & 0xFC) | 2);
             break;
         case DRAWING:
-            memory.write(0xFF41, (memory.read(0xFF41) & 0xF8) | 3);
+            memory.write(0xFF41, (memory.read(0xFF41) & 0xFC) | 3);
             break;
         case HBLANK:
-            memory.write(0xFF41, (memory.read(0xFF41) & 0xF8) | 0);
+            memory.write(0xFF41, (memory.read(0xFF41) & 0xFC) | 0);
             break;
         case VBLANK:
-            memory.write(0xFF41, (memory.read(0xFF41) & 0xF8) | 1);
+            memory.write(0xFF41, (memory.read(0xFF41) & 0xFC) | 1);
             break;
     }
 }
