@@ -72,6 +72,10 @@ void PPU::run_cycle() {
             }
         }
     }
+    if (memory.read(0xFF45) == memory.read(0xFF44)) {
+        memory.write(0xFF41, memory.read(0xFF41) | 0x40);
+        memory.set_interrupt(INT_LCDSTAT, true);
+    }
 }
 
 void PPU::run_line() {
