@@ -646,16 +646,16 @@ void CPU::add_rr() {
     uint8_t carry;
     uint8_t half_carry = 0;
     switch (instruction) {
-        case 0x03:
+        case 0x09:
             operand = registers16(BC);
             break;
-        case 0x13:
+        case 0x19:
             operand = registers16(DE);
             break;
-        case 0x23:
+        case 0x29:
             operand = registers16(HL);
             break;
-        case 0x33:
+        case 0x39:
             operand = sp;
             break;
     }
@@ -663,7 +663,7 @@ void CPU::add_rr() {
         half_carry = 1;
     carry = sp > ((0xFFFF - operand) & 0xFFFF);
 
-    registers16(HL) += registers16(HL);
+    registers16(HL) += operand;
 
     registers8(F) = (registers8(F) & F_ZERO_MASK) | (half_carry << F_HALF_CARRY_SHIFT) | (carry << F_CARRY_SHIFT);
 }
