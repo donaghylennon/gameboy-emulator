@@ -818,7 +818,7 @@ void CPU::dec_r() {
     }
     if (!result)
         zero = 1;
-    registers8(F) = (registers8(F) & 0x1) | (zero << F_ZERO_SHIFT) | (half_carry << F_HALF_CARRY_SHIFT);
+    registers8(F) = (registers8(F) & 0x10) | F_NEG_MASK | (zero << F_ZERO_SHIFT) | (half_carry << F_HALF_CARRY_SHIFT);
 }
 
 void CPU::push() {
