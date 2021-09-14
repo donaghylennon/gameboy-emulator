@@ -486,30 +486,36 @@ void CPU::load_hl_sp_plus_simm() {
 }
 
 void CPU::alu_r() {
+    uint8_t operand;
+    if ((instruction & 0x7) == 0x6) {
+        operand = memory.read(registers16(HL));
+    } else {
+        operand = get_reg_by_index(right_reg_index(instruction));
+    }
     switch (instruction & 0xF8) {
         case 0x80:
-            alu_add(get_reg_by_index(right_reg_index(instruction)));
+            alu_add(operand);
             break;
         case 0x88:
-            alu_adc(get_reg_by_index(right_reg_index(instruction)));
+            alu_adc(operand);
             break;
         case 0x90:
-            alu_sub(get_reg_by_index(right_reg_index(instruction)));
+            alu_sub(operand);
             break;
         case 0x98:
-            alu_sbc(get_reg_by_index(right_reg_index(instruction)));
+            alu_sbc(operand);
             break;
         case 0xA0:
-            alu_and(get_reg_by_index(right_reg_index(instruction)));
+            alu_and(operand);
             break;
         case 0xA8:
-            alu_xor(get_reg_by_index(right_reg_index(instruction)));
+            alu_xor(operand);
             break;
         case 0xB0:
-            alu_or(get_reg_by_index(right_reg_index(instruction)));
+            alu_or(operand);
             break;
         case 0xB8:
-            alu_cp(get_reg_by_index(right_reg_index(instruction)));
+            alu_cp(operand);
             break;
     }
 }
