@@ -156,7 +156,9 @@ void PPU::fetch_scanline() {
             } else {
                 drawn_pixels++;
                 uint8_t mask = 1 << i;
-                unsigned palette_index = ((tiledata_high & mask) >> (i-1)) | ((tiledata_low & mask) >> i);
+                unsigned palette_index = (i != 0 ? ((tiledata_high & mask) >> (i-1)) 
+                    : (tiledata_high & mask) << 1) 
+                    | ((tiledata_low & mask) >> i);
                 unsigned colour_index = bg_palette(palette_index);
                 background_fifo.push(colours[colour_index]);
             }
