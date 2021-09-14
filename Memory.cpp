@@ -45,6 +45,9 @@ void Memory::write(unsigned address, uint8_t data) {
         high_ram[address - 0xFF80] = data;
     else if (address == 0xFFFF)
         interrupt_enable = data;
+    else {
+        printf("Invalid memory write\n");
+    }
 }
 
 uint8_t Memory::read(unsigned address) {
@@ -84,6 +87,10 @@ uint8_t Memory::read(unsigned address) {
         return high_ram[address - 0xFF80];
     else if (address == 0xFFFF)
         return interrupt_enable;
+    else {
+        printf("Invalid memory read\n");
+        return 0xFF;
+    }
 }
 
 uint8_t& Memory::operator[](unsigned index) {
