@@ -128,7 +128,7 @@ void PPU::fetch_scanline() {
 
     unsigned current_scanline = memory.read(0xFF44) + memory.read(0xFF42);
 
-    uint16_t tilemap_line_start = (current_scanline / 8) * 32;
+    uint16_t tilemap_line_start = ((current_scanline / 8) * 32) % 1024;
     uint16_t tilemap_line_end = tilemap_line_start + 32;
 
     unsigned tile_line = current_scanline % 8;
