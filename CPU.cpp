@@ -950,93 +950,184 @@ void CPU::cb_instruction() {
 }
 
 void CPU::rlc_r() {
-    uint8_t& reg = get_reg_by_index(right_reg_index(instruction));
     uint8_t zero;
-    uint8_t high_bit = (reg & 0x80);
-    reg = (reg << 1) | (high_bit ? 1 : 0);
-    zero = reg == 0 ? 1 : 0;
+    uint8_t high_bit;
+    if ((instruction & 0x7) == 0x6) {
+        uint8_t byte = memory.read(registers16(HL));
+        high_bit = (byte & 0x80);
+        byte = (byte << 1) | (high_bit ? 1 : 0);
+        zero = byte == 0 ? 1 : 0;
+        memory.write(registers16(HL), byte);
+    } else {
+        uint8_t& reg = get_reg_by_index(right_reg_index(instruction));
+        high_bit = (reg & 0x80);
+        reg = (reg << 1) | (high_bit ? 1 : 0);
+        zero = reg == 0 ? 1 : 0;
+    }
     registers8(F) = (zero << F_ZERO_SHIFT) | (high_bit >> 3);
 }
 
 void CPU::rrc_r() {
-    uint8_t& reg = get_reg_by_index(right_reg_index(instruction));
     uint8_t zero;
-    uint8_t low_bit = (reg & 0x01);
-    reg = (reg >> 1) | (low_bit ? 0x80 : 0);
+    uint8_t low_bit;
+    if ((instruction & 0x7) == 0x6) {
+        uint8_t byte = memory.read(registers16(HL));
+        low_bit = (byte & 0x01);
+        byte = (byte >> 1) | (low_bit ? 0x80 : 0);
+        zero = byte == 0 ? 1 : 0;
+        memory.write(registers16(HL), byte);
+    } else {
+        uint8_t& reg = get_reg_by_index(right_reg_index(instruction));
+        low_bit = (reg & 0x01);
+        reg = (reg >> 1) | (low_bit ? 0x80 : 0);
+        zero = reg == 0 ? 1 : 0;
+    }
     registers8(F) = (zero << F_ZERO_SHIFT) | (low_bit << F_CARRY_SHIFT);
 }
 
 void CPU::rl_r() {
-    uint8_t& reg = get_reg_by_index(right_reg_index(instruction));
     uint8_t zero;
-    uint8_t high_bit = (reg & 0x80);
-    reg = (reg << 1) | ((registers8(F) & F_CARRY_MASK) ? 1 : 0);
-    zero = reg == 0 ? 1 : 0;
+    uint8_t high_bit;
+    if ((instruction & 0x7) == 0x6) {
+        uint8_t byte = memory.read(registers16(HL));
+        high_bit = (byte & 0x80);
+        byte = (byte << 1) | ((registers8(F) & F_CARRY_MASK) ? 1 : 0);
+        zero = byte == 0 ? 1 : 0;
+        memory.write(registers16(HL), byte);
+    } else {
+        uint8_t& reg = get_reg_by_index(right_reg_index(instruction));
+        high_bit = (reg & 0x80);
+        reg = (reg << 1) | ((registers8(F) & F_CARRY_MASK) ? 1 : 0);
+        zero = reg == 0 ? 1 : 0;
+    }
     registers8(F) = (zero << F_ZERO_SHIFT) | (high_bit >> 3);
 }
 
 void CPU::rr_r() {
-    uint8_t& reg = get_reg_by_index(right_reg_index(instruction));
     uint8_t zero;
-    uint8_t low_bit = (reg & 0x01);
-    reg = (reg >> 1) | ((registers8(F) & F_CARRY_MASK) ? 0x80 : 0);
-    zero = reg == 0 ? 1 : 0;
-    registers8(F) = low_bit << F_CARRY_SHIFT;
+    uint8_t low_bit;
+    if ((instruction & 0x7) == 0x6) {
+        uint8_t byte = memory.read(registers16(HL));
+        low_bit = (byte & 0x01);
+        byte = (byte >> 1) | ((registers8(F) & F_CARRY_MASK) ? 0x80 : 0);
+        zero = byte == 0 ? 1 : 0;
+        memory.write(registers16(HL), byte);
+    } else {
+        uint8_t& reg = get_reg_by_index(right_reg_index(instruction));
+        low_bit = (reg & 0x01);
+        reg = (reg >> 1) | ((registers8(F) & F_CARRY_MASK) ? 0x80 : 0);
+        zero = reg == 0 ? 1 : 0;
+    }
+    registers8(F) = (zero << F_ZERO_SHIFT) | (low_bit << F_CARRY_SHIFT);
 }
 
 void CPU::sla_r() {
-    uint8_t& reg = get_reg_by_index(right_reg_index(instruction));
     uint8_t zero;
-    uint8_t high_bit = (reg & 0x80);
-    reg = reg << 1;
-    zero = reg == 0 ? 1 : 0;
+    uint8_t high_bit;
+    if ((instruction & 0x7) == 0x6) {
+        uint8_t byte = memory.read(registers16(HL));
+        high_bit = (byte & 0x80);
+        byte = byte << 1;
+        zero = byte == 0 ? 1 : 0;
+        memory.write(registers16(HL), byte);
+    } else {
+        uint8_t& reg = get_reg_by_index(right_reg_index(instruction));
+        high_bit = (reg & 0x80);
+        reg = reg << 1;
+        zero = reg == 0 ? 1 : 0;
+    }
     registers8(F) = (zero << F_ZERO_SHIFT) | (high_bit >> 3);
 }
 
 void CPU::sra_r() {
-    uint8_t& reg = get_reg_by_index(right_reg_index(instruction));
     uint8_t zero;
-    uint8_t low_bit = (reg & 0x01);
-    uint8_t high_bit = (reg & 0x80);
-    reg = (reg >> 1) | (high_bit);
-    zero = reg == 0 ? 1 : 0;
+    uint8_t high_bit;
+    uint8_t low_bit;
+    if ((instruction & 0x7) == 0x6) {
+        uint8_t byte = memory.read(registers16(HL));
+        low_bit = (byte & 0x01);
+        high_bit = (byte & 0x80);
+        byte = (byte >> 1) | (high_bit);
+        zero = byte == 0 ? 1 : 0;
+        memory.write(registers16(HL), byte);
+    } else {
+        uint8_t& reg = get_reg_by_index(right_reg_index(instruction));
+        low_bit = (reg & 0x01);
+        high_bit = (reg & 0x80);
+        reg = (reg >> 1) | (high_bit);
+        zero = reg == 0 ? 1 : 0;
+    }
     registers8(F) = (zero << F_ZERO_SHIFT) | (low_bit << F_CARRY_SHIFT);
 }
 
 void CPU::swap_r() {
-    uint8_t& reg = get_reg_by_index(right_reg_index(instruction));
     uint8_t zero;
-    reg = ((reg & 0xF0) >> 4) | ((reg & 0x0F) << 4);
-    zero = reg == 0 ? 1 : 0;
+    if ((instruction & 0x7) == 0x6) {
+        uint8_t byte = memory.read(registers16(HL));
+        byte = ((byte & 0xF0) >> 4) | ((byte & 0x0F) << 4);
+        zero = byte == 0 ? 1 : 0;
+        memory.write(registers16(HL), byte);
+    } else {
+        uint8_t& reg = get_reg_by_index(right_reg_index(instruction));
+        reg = ((reg & 0xF0) >> 4) | ((reg & 0x0F) << 4);
+        zero = reg == 0 ? 1 : 0;
+    }
     registers8(F) = zero << F_ZERO_SHIFT;
 }
 
 void CPU::srl_r() {
-    uint8_t& reg = get_reg_by_index(right_reg_index(instruction));
     uint8_t zero;
-    uint8_t low_bit = (reg & 0x01);
-    reg = reg >> 1;
-    zero = reg == 0 ? 1 : 0;
+    uint8_t low_bit;
+    if ((instruction & 0x7) == 0x6) {
+        uint8_t byte = memory.read(registers16(HL));
+        low_bit = (byte & 0x01);
+        byte = byte >> 1;
+        zero = byte == 0 ? 1 : 0;
+        memory.write(registers16(HL), byte);
+    } else {
+        uint8_t& reg = get_reg_by_index(right_reg_index(instruction));
+        low_bit = (reg & 0x01);
+        reg = reg >> 1;
+        zero = reg == 0 ? 1 : 0;
+    }
     registers8(F) = (zero << F_ZERO_SHIFT) | (low_bit << F_CARRY_SHIFT);
 }
 
 void CPU::bit() {
     uint8_t bit = (0x1 << left_reg_index(instruction));
-    uint8_t& reg = get_reg_by_index(right_reg_index(instruction));
-    uint8_t zero = (reg & bit) == 0 ? 1 : 0;
+    uint8_t zero;
+    uint8_t value;
+    if ((instruction & 0x7) == 0x6) {
+        value = memory.read(registers16(HL));
+    } else {
+        value = get_reg_by_index(right_reg_index(instruction));
+    }
+    zero = (value & bit) == 0 ? 1 : 0;
     registers8(F) = (zero << F_ZERO_SHIFT) | F_HALF_CARRY_MASK | (registers8(F) & F_CARRY_MASK);
 }
 
 void CPU::res() {
     uint8_t bit = (0x1 << left_reg_index(instruction));
-    uint8_t& reg = get_reg_by_index(right_reg_index(instruction));
-    reg = reg & ~bit;
+    if ((instruction & 0x7) == 0x6) {
+        uint8_t byte = memory.read(registers16(HL));
+        byte = byte & ~bit;
+        memory.write(registers16(HL), byte);
+    } else {
+        uint8_t& reg = get_reg_by_index(right_reg_index(instruction));
+        reg = reg & ~bit;
+    }
 }
 
 void CPU::set() {
     uint8_t bit = (0x1 << left_reg_index(instruction));
-    uint8_t& reg = get_reg_by_index(right_reg_index(instruction));
-    reg = reg | bit;
+    if ((instruction & 0x7) == 0x6) {
+        uint8_t byte = memory.read(registers16(HL));
+        byte = byte | bit;
+        memory.write(registers16(HL), byte);
+    } else {
+        uint8_t& reg = get_reg_by_index(right_reg_index(instruction));
+        reg = reg | bit;
+    }
 }
 
 void CPU::jp_imm() {
