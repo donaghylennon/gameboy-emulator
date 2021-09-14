@@ -63,15 +63,14 @@ void CPU::run() {
                 if (!--interrupt_delay)
                     interrupt_enabled = true;
             }
-        }
-
-        SDL_Event event;
-        while(SDL_PollEvent(&event)) {
-            switch(event.type) {
-                case SDL_QUIT:
-                    running = false;
-                    SDL_Quit();
-                    break;
+            SDL_Event event;
+            while(SDL_PollEvent(&event)) {
+                switch(event.type) {
+                    case SDL_QUIT:
+                        running = false;
+                        SDL_Quit();
+                        break;
+                }
             }
         }
     }
