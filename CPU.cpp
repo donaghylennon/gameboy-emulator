@@ -475,14 +475,14 @@ void CPU::load_sp_hl() {
 
 void CPU::load_hl_sp_plus_simm() {
     uint8_t carry;
-    uint8_t half_carry = 0;
+    uint8_t half_carry;
     int8_t operand = memory.read(pc++);
-    if (((sp & 0xFFF) - (operand & 0xFFF)) & 0x1000)
-        half_carry = 1;
-    // This might be off by one when op negative, since when operand negative 0xFFFF - 1 = 0
-    carry = sp > ((0xFFFF - operand) & 0xFFFF);
+
+    carry = (sp & 0xFF) + (uint8_t)operand > 0xFF;
+    half_carry = (sp & 0xF) + ((uint8_t)operand & 0xF) > 0xF;
+
     registers16(HL) = sp + (int8_t) operand;
-    registers8(F) = (half_carry << F_HALF_CARRY_SHIFT) & (carry << F_CARRY_SHIFT);
+    registers8(F) = (half_carry << F_HALF_CARRY_SHIFT) | (carry << F_CARRY_SHIFT);
 }
 
 void CPU::alu_r() {
@@ -658,9 +658,9 @@ void CPU::add_rr() {
             operand = sp;
             break;
     }
-    if (((sp & 0xFFF) - (operand & 0xFFF)) & 0x1000)
+    if (((registers16(HL) & 0xFFF) + (operand & 0xFFF)) & 0x1000)
         half_carry = 1;
-    carry = sp > ((0xFFFF - operand) & 0xFFFF);
+    carry = registers16(HL) > ((0xFFFF - operand) & 0xFFFF);
 
     registers16(HL) += operand;
 
@@ -668,14 +668,12 @@ void CPU::add_rr() {
 }
 
 void CPU::add_sp_imm() {
-    uint8_t carry;
-    uint8_t half_carry;
+    uint8_t carry = 0;
+    uint8_t half_carry = 0;
     int8_t operand = memory.read(pc++);
 
-    if (((sp & 0xFFF) - (operand & 0xFFF)) & 0x1000)
-        half_carry = 1;
-    // This might be off by one when op negative, since when operand negative 0xFFFF - 1 = 0
-    carry = sp > ((0xFFFF - operand) & 0xFFFF);
+    carry = (sp & 0xFF) + (uint8_t)operand > 0xFF;
+    half_carry = (sp & 0xF) + ((uint8_t)operand & 0xF) > 0xF;
 
     sp += operand;
     registers8(F) = (half_carry << F_HALF_CARRY_SHIFT) | (carry << F_CARRY_SHIFT);
