@@ -1191,7 +1191,7 @@ void CPU::cpl() {
 }
 
 void CPU::ccf() {
-    registers8(F) = (registers8(F) & 0x80) | ~(registers8(F) & 0x10);
+    registers8(F) = (registers8(F) & 0x80) | ((~(registers8(F) & 0x10)) & 0x10);
 }
 
 void CPU::scf() {
