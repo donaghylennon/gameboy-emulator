@@ -739,8 +739,8 @@ void CPU::inc_r() {
             break;
         case 0x34:
             half_carry = (memory.read(registers16(HL)) & 0xF) == 0xF;
-            result = registers16(HL) + 1;
-            memory.write(registers16(HL), memory.read(registers16(HL)+1));
+            result = memory.read(registers16(HL)) + 1;
+            memory.write(registers16(HL), memory.read(registers16(HL))+1);
             break;
         case 0x3C:
             half_carry = (registers8(A) & 0xF) == 0xF;
@@ -807,8 +807,8 @@ void CPU::dec_r() {
             break;
         case 0x35:
             half_carry = (memory.read(registers16(HL)) & 0xF) == 0x0;
-            result = registers16(HL) - 1;
-            memory.write(registers16(HL), memory.read(registers16(HL)-1));
+            result = memory.read(registers16(HL)) - 1;
+            memory.write(registers16(HL), memory.read(registers16(HL))-1);
             break;
         case 0x3D:
             half_carry = (registers8(A) & 0xF) == 0x0;
