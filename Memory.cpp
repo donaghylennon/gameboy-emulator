@@ -41,7 +41,9 @@ void Memory::write(unsigned address, uint8_t data) {
     else if (address == 0xFF50) {
         boot_rom_reg = data;
         boot_rom_enabled = false;
-    } else if (address < 0xFFFF)
+    } else if (address < 0xFF80)
+        junk = data;
+    else if (address < 0xFFFF)
         high_ram[address - 0xFF80] = data;
     else if (address == 0xFFFF)
         interrupt_enable = data;
