@@ -7,7 +7,8 @@
 #include <fstream>
 #include <iostream>
 
-#define CYCLE_TIME 0.2384185791
+//#define CYCLE_TIME 0.2384185791
+#define CYCLE_TIME 0.953674316406
 
 #define F_ZERO_MASK 0x80
 #define F_NEG_MASK 0x40
