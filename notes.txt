@@ -17,10 +17,10 @@ which execute them
 
 GameBoy Emulator To Do
 
-x PPU and Screen
-x Rest of CB instructions
+- Sprites
 - Interrupts
 - Timers
+- Joypad
 
 - Reset and restart
 - Debugging system
