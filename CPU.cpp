@@ -1151,7 +1151,8 @@ void CPU::jp_c_imm() {
 }
 
 void CPU::jr_imm() {
-    pc += (int8_t) memory.read(pc++);
+    int8_t offset = memory.read(pc++);
+    pc += offset;
 }
 
 void CPU::jr_c_imm() {
