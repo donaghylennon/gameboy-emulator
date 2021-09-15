@@ -26,6 +26,7 @@ public:
     void fetch_scanline();
 
     void draw_line();
+    void render_screen();
 private:
     SDL_Window *window;
     SDL_Renderer *renderer;
@@ -47,5 +48,5 @@ private:
 
     void set_mode_flag();
 
-    unsigned bg_palette(unsigned index);
+    unsigned bg_palette(unsigned index, uint8_t palette);
 };

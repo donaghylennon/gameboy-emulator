@@ -42,15 +42,15 @@ void PPU::run_cycle() {
                 hblank_counter = 0;
                 current_line++;
                 if (current_line == 144) {
-                    memory.write(0xFF44, memory.read(0xFF44)+1);
+                    memory.write(0xFF44, current_line);
                     current_state = VBLANK;
                     memory.set_interrupt(INT_VBLANK, true);
                     memory.set_interrupt(INT_LCDSTAT, true);
                     memory.write(0xFF41, memory.read(0xFF41) | VBLANK_SRC);
                     set_mode_flag();
-                    current_line = 0;
+                    render_screen();
                 } else {
-                    memory.write(0xFF44, memory.read(0xFF44)+1);
+                    memory.write(0xFF44, current_line);
                     current_state = OAM_SCAN;
                     memory.set_interrupt(INT_LCDSTAT, true);
                     memory.write(0xFF41, memory.read(0xFF41) | OAM_SRC);
@@ -60,9 +60,11 @@ void PPU::run_cycle() {
         } else if (current_state == VBLANK) {
             vblank_counter++;
             if ((vblank_counter % 456) == 0) {
-                memory.write(0xFF44, memory.read(0xFF44)+1);
+                current_line++;
+                memory.write(0xFF44, current_line);
             }
             if (vblank_counter == 4560) {
+                current_line = 0;
                 memory.write(0xFF44, 0);
                 vblank_counter = 0;
                 current_state = OAM_SCAN;
@@ -84,7 +86,7 @@ void PPU::run_line() {
     //}
     //fetcher_x = 0;
     fetch_scanline();
-    draw_line();
+    //draw_line();
 }
 
 void PPU::fetch_tile_row() {
@@ -134,6 +136,7 @@ void PPU::fetch_scanline() {
     unsigned tile_line = current_scanline % 8;
 
     unsigned skip_pixels = memory.read(0xFF43);
+    uint8_t palette = memory.read(0xFF47);
     unsigned drawn_pixels = 0;
     // Loop though each tile index in the line in the tilemap corresponding to the
     // tiles the current scanline falls in
@@ -146,21 +149,25 @@ void PPU::fetch_scanline() {
         } else {
             tile_line_address = 0x9000 + ((int8_t)tile_index * 16) + (tile_line * 2);
         }
+        //printf("Tile line address: %x\n", tile_line_address);
 
         uint8_t tiledata_low = memory.read(tile_line_address);
         uint8_t tiledata_high = memory.read(tile_line_address + 1);
+        //printf("Tile data low: %x\n", tiledata_low);
+        //printf("Tile data high: %x\n", tiledata_high);
 
         for (int i = 7; i >= 0 && drawn_pixels < 160; i--) {
             if (skip_pixels) {
                 skip_pixels--;
             } else {
-                drawn_pixels++;
                 uint8_t mask = 1 << i;
                 unsigned palette_index = (i != 0 ? ((tiledata_high & mask) >> (i-1)) 
                     : (tiledata_high & mask) << 1) 
                     | ((tiledata_low & mask) >> i);
-                unsigned colour_index = bg_palette(palette_index);
-                background_fifo.push(colours[colour_index]);
+                unsigned colour_index = bg_palette(palette_index, palette);
+                //background_fifo.push(colours[colour_index]);
+                draw_buffer[current_line*160 + drawn_pixels] = colours[colour_index];
+                drawn_pixels++;
             }
         }
     }
@@ -172,6 +179,13 @@ void PPU::draw_line() {
         background_fifo.pop();
     }
 
+    //SDL_UpdateTexture(texture, nullptr, draw_buffer, 160*4);
+    //SDL_RenderClear(renderer);
+    //SDL_RenderCopy(renderer, texture, nullptr, nullptr);
+    //SDL_RenderPresent(renderer);
+}
+
+void PPU::render_screen() {
     SDL_UpdateTexture(texture, nullptr, draw_buffer, 160*4);
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, texture, nullptr, nullptr);
@@ -195,7 +209,7 @@ void PPU::set_mode_flag() {
     }
 }
 
-unsigned PPU::bg_palette(unsigned index) {
+unsigned PPU::bg_palette(unsigned index, uint8_t palette) {
     uint8_t mask = 0x3 << (index * 2);
-    return (memory.read(0xFF47) & mask) >> (index * 2);
+    return (palette & mask) >> (index * 2);
 }
