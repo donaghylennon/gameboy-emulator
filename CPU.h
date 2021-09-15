@@ -70,6 +70,7 @@ public:
     void run();
 private:
     std::ifstream rom_file;
+    unsigned wait_event_poll = 0;
 
     uint16_t sp;
     uint16_t pc;
