@@ -22,11 +22,9 @@ public:
     void run_cycle();
 
     void run_line();
-    void fetch_tile_row();
     void fetch_scanline();
     void fetch_scanline_sprites();
 
-    void draw_line();
     void render_screen();
 private:
     SDL_Window *window;
@@ -35,8 +33,6 @@ private:
     uint32_t draw_buffer[160*144] = {};
     Memory& memory;
     unsigned display_scale = 3;
-    std::queue<uint32_t> background_fifo;
-    std::queue<int> object_fifo;
     uint32_t colours[4] = { 0xFFFFFFFF, 0xBBBBBBFF, 0x555555FF, 0x000000FF };
 
     PpuState current_state = OAM_SCAN;

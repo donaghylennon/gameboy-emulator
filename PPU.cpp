@@ -82,44 +82,8 @@ void PPU::run_cycle() {
 }
 
 void PPU::run_line() {
-    //for (int i = 0; i < 20; i++) {
-    //    fetch_tile_row();
-    //}
-    //fetcher_x = 0;
     fetch_scanline();
     fetch_scanline_sprites();
-    //draw_line();
-}
-
-void PPU::fetch_tile_row() {
-    unsigned tilemap_start;
-    if (memory.read(0xFF40) & 0x8) {
-        tilemap_start = 0x9C00;
-    } else {
-        tilemap_start = 0x9800;
-    }
-    unsigned tilemap_x = ((memory.read(0xFF43) / 8) + fetcher_x) & 0x1F;
-    unsigned tilemap_y = (current_line + memory.read(0xFF42)) & 0xFF;
-
-    unsigned tilemap_index = (tilemap_y/8) * 32 + tilemap_x;
-    uint8_t tile_index = memory.read(tilemap_start + tilemap_index);
-
-    uint8_t tiledata_low, tiledata_high;
-    if (memory.read(0xFF40) & 0x10) {
-        tiledata_low = memory.read(0x8000 + tile_index);
-        tiledata_high = memory.read(0x8000 + tile_index + 1);
-    } else {
-        tiledata_low = memory.read(0x9000 + (int8_t)tile_index);
-        tiledata_high = memory.read(0x9000 + (int8_t)(tile_index + 1));
-    }
-
-    for (int i = 0; i < 8; i++) {
-        uint8_t mask = 1 << i;
-        unsigned colour_index = ((tiledata_high & mask) >> (i-1)) & ((tiledata_low & mask) >> i);
-        background_fifo.push(colours[colour_index]);
-    }
-
-    fetcher_x++;
 }
 
 void PPU::fetch_scanline() {
@@ -151,12 +115,9 @@ void PPU::fetch_scanline() {
         } else {
             tile_line_address = 0x9000 + ((int8_t)tile_index * 16) + (tile_line * 2);
         }
-        //printf("Tile line address: %x\n", tile_line_address);
 
         uint8_t tiledata_low = memory.read(tile_line_address);
         uint8_t tiledata_high = memory.read(tile_line_address + 1);
-        //printf("Tile data low: %x\n", tiledata_low);
-        //printf("Tile data high: %x\n", tiledata_high);
 
         for (int i = 7; i >= 0 && drawn_pixels < 160; i--) {
             if (skip_pixels) {
@@ -167,7 +128,6 @@ void PPU::fetch_scanline() {
                     : (tiledata_high & mask) << 1) 
                     | ((tiledata_low & mask) >> i);
                 unsigned colour_index = bg_palette(palette_index, palette);
-                //background_fifo.push(colours[colour_index]);
                 draw_buffer[current_line*160 + drawn_pixels] = colours[colour_index];
                 drawn_pixels++;
             }
@@ -216,18 +176,6 @@ void PPU::fetch_scanline_sprites() {
             x_pos++;
         }
     }
-}
-
-void PPU::draw_line() {
-    for (int i = 0; i < 160; i++) {
-        draw_buffer[current_line*160 + i] = background_fifo.front();
-        background_fifo.pop();
-    }
-
-    //SDL_UpdateTexture(texture, nullptr, draw_buffer, 160*4);
-    //SDL_RenderClear(renderer);
-    //SDL_RenderCopy(renderer, texture, nullptr, nullptr);
-    //SDL_RenderPresent(renderer);
 }
 
 void PPU::render_screen() {

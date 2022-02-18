@@ -120,11 +120,7 @@ void CPU::print_registers16() {
 }
 
 void CPU::fetch_next_instr() {
-        //std::cout << "PC: ";
-        //printf("%x || ", pc);
     instruction = memory.read(pc++);
-        //std::cout << "Instruction: ";
-        //printf("%x\n", instruction);
 
     switch (instruction & 0xF8) {
         case 0x00:
@@ -144,7 +140,6 @@ void CPU::fetch_next_instr() {
                             load_mem_from_imm_sp();
                             break;
                         case 0x10:
-                            //stop();
                             break;
                         case 0x18:
                             jr_imm();
@@ -370,7 +365,6 @@ void CPU::load_r_imm() {
 }
 
 void CPU::load_mem_from_reg_r() {
-    // Use another array/method to map to real reg indexes?
     switch (instruction) {
         case 0x02:
             load_mem_r(registers16(BC));
@@ -417,7 +411,6 @@ void CPU::load_r_mem_from_reg() {
     }
 }
 
-// ********* change to inline function to get 16 bit and reduce number of functions
 void CPU::load_mem_from_imm_r() {
     uint8_t lsb = memory.read(pc++);
     uint8_t msb = memory.read(pc++);
@@ -435,7 +428,6 @@ void CPU::load_r_mem_from_imm() {
 
     load_r_mem(concat_bytes(lsb, msb));
 }
-// ********************************************************************************
 
 void CPU::load_mem_r(uint16_t address) {
     memory.write(address, registers8(A));
@@ -1326,7 +1318,6 @@ uint8_t& CPU::get_reg_by_index(unsigned index) {
 }
 
 uint8_t CPU::read_reg(unsigned index) {
-    // Do this using an array matching index to actual reg pos?
     if (index == 7)
         return registers8(A);
     else if (index == 6)

@@ -17,7 +17,6 @@ class Memory {
 public:
     void write(unsigned address, uint8_t data);
     uint8_t read(unsigned address);
-    uint8_t& operator[](unsigned index);
     void increment_timer();
     void increment_divider();
     void load_rom(std::string rom_path);
