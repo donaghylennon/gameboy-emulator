@@ -46,4 +46,6 @@ private:
     uint8_t timer_copy;
     
     bool boot_rom_enabled = true;
+
+    void dma_transfer(uint8_t address_byte);
 };

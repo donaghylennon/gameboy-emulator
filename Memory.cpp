@@ -2,11 +2,6 @@
 
 void Memory::write(unsigned address, uint8_t data) {
     if (address < 0x8000) {
-        std::cout << "Error: Writing to rom" << std::endl;
-        std::cout << "Address: ";
-        printf("%x\n", address);
-        std::cout << "Data: ";
-        printf("%x\n", data);
     } else if (address < 0xA000)
         vram[address - 0x8000] = data;
     else if (address < 0xC000)
@@ -36,6 +31,8 @@ void Memory::write(unsigned address, uint8_t data) {
         sound_regs[address - 0xFF10] = data;
     else if (address < 0xFF40)
         waveform_ram[address - 0xFF30] = data;
+    else if (address == 0xFF46)
+        dma_transfer(data);
     else if (address < 0xFF4C)
         lcd_regs[address - 0xFF40] = data;
     else if (address == 0xFF50) {
@@ -145,4 +142,11 @@ void Memory::dump_vram() {
         printf("%x\t", vram[i]);
     }
     printf("\n");
+}
+
+void Memory::dma_transfer(uint8_t address_byte) {
+    uint16_t source_address = address_byte << 8;
+    for (int i = 0; i < 0xA0; i++) {
+        oam[i] = this->read(source_address + i);
+    }
 }

@@ -24,6 +24,7 @@ public:
     void run_line();
     void fetch_tile_row();
     void fetch_scanline();
+    void fetch_scanline_sprites();
 
     void draw_line();
     void render_screen();

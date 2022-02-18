@@ -6,6 +6,7 @@ PPU::PPU(Memory& memory) : memory(memory) {
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888,
             SDL_TEXTUREACCESS_STREAMING, 160, 144);
+    render_screen();
 }
 
 PPU::~PPU() {
@@ -73,10 +74,10 @@ void PPU::run_cycle() {
                 set_mode_flag();
             }
         }
-    }
-    if (memory.read(0xFF45) == memory.read(0xFF44)) {
-        memory.write(0xFF41, memory.read(0xFF41) | 0x40);
-        memory.set_interrupt(INT_LCDSTAT, true);
+        if (memory.read(0xFF45) == memory.read(0xFF44)) {
+            memory.write(0xFF41, memory.read(0xFF41) | 0x40);
+            memory.set_interrupt(INT_LCDSTAT, true);
+        }
     }
 }
 
@@ -86,6 +87,7 @@ void PPU::run_line() {
     //}
     //fetcher_x = 0;
     fetch_scanline();
+    fetch_scanline_sprites();
     //draw_line();
 }
 
@@ -169,6 +171,49 @@ void PPU::fetch_scanline() {
                 draw_buffer[current_line*160 + drawn_pixels] = colours[colour_index];
                 drawn_pixels++;
             }
+        }
+    }
+}
+
+void PPU::fetch_scanline_sprites() {
+    if (!(memory.read(0xFF40) & 0x2))
+        return;
+    unsigned num_sprites = 0;
+    unsigned sprites_indexes[10];
+    for (unsigned i = 0; i < 0xA0 && num_sprites < 10; i += 4) {
+        uint8_t y_pos = memory.read(0xFE00 + i);
+        if (y_pos > 8 && (y_pos) / 8 == (current_line + 16) / 8)
+            sprites_indexes[num_sprites++] = i;
+    }
+    if (num_sprites == 0)
+        return;
+    for (int i = num_sprites - 1; i >= 0; i--) {
+        unsigned tile_line = (current_line - (memory.read(0xFE00 + sprites_indexes[i]))) / 8;
+        unsigned tile_index = memory.read(0xFE00 + sprites_indexes[i] + 2);
+
+        unsigned tile_line_address = 0x8000 + (tile_index * 16) + (tile_line * 2);
+        
+        uint8_t tiledata_low = memory.read(tile_line_address);
+        uint8_t tiledata_high = memory.read(tile_line_address + 1);
+
+        unsigned x_pos = memory.read(0xFE00 + sprites_indexes[i] + 1);
+        uint8_t palette;
+        if (memory.read(0xFE00 + sprites_indexes[i] + 3) & 0x10)
+            palette = memory.read(0xFF48);
+        else
+            palette = memory.read(0xFF49);
+
+        for (int j = 7; j >= 0 && x_pos < 168; j--) {
+            if (x_pos >= 8) {
+                uint8_t mask = 1 << j;
+                unsigned palette_index = (j != 0 ? ((tiledata_high & mask) >> (j-1)) 
+                    : (tiledata_high & mask) << 1) 
+                    | ((tiledata_low & mask) >> j);
+                unsigned colour_index = bg_palette(palette_index, palette);
+                if (colour_index != 0)
+                    draw_buffer[current_line*160 + (x_pos - 8)] = colours[colour_index];
+            }
+            x_pos++;
         }
     }
 }
