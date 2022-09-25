@@ -66,9 +66,11 @@ enum Registers16 {
 
 class CPU {
 public:
-    CPU(std::string rom_path);
+    CPU(std::string rom_path, bool log);
     void run();
+    void log();
 private:
+    bool do_log = false;
     std::ifstream rom_file;
     unsigned wait_event_poll = 0;
 

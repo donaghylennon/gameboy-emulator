@@ -2,7 +2,8 @@
 
 #include <chrono>
 
-CPU::CPU(std::string rom_path) {
+CPU::CPU(std::string rom_path, bool log) {
+    do_log = log;
     memory.load_rom(rom_path);
     memory.load_boot_rom("Resources/dmg_boot.bin");
 }
@@ -34,6 +35,8 @@ void CPU::run() {
             }
 
             if (!wait_cycles) {
+                if (do_log)
+                    log();
                 handle_interrupts();
 
                 fetch_next_instr();
@@ -77,6 +80,25 @@ void CPU::run() {
             }
         }
     }
+}
+
+void CPU::log() {
+    printf("A: %02X ", registers8(A));
+    printf("F: %02X ", registers8(F));
+    printf("B: %02X ", registers8(B));
+    printf("C: %02X ", registers8(C));
+    printf("D: %02X ", registers8(D));
+    printf("E: %02X ", registers8(E));
+    printf("H: %02X ", registers8(H));
+    printf("L: %02X ", registers8(L));
+    printf("SP: %04X ", sp);
+    printf("PC: 00:%04X ", pc);
+    printf("(");
+    printf("%02X ", memory.read(pc));
+    printf("%02X ", memory.read(pc+1));
+    printf("%02X ", memory.read(pc+2));
+    printf("%02X", memory.read(pc+3));
+    printf(")\n");
 }
 
 uint16_t& CPU::registers16(unsigned index) {
