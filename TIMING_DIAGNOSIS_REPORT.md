@@ -1,42 +1,93 @@
-# Timing Diagnosis Report (Work-in-Progress Game Boy Emulator)
+# Timing Diagnosis Report (Revised Using Research Baseline)
 
 ## Summary
-The emulator timing issue is primarily caused by the main CPU loop advancing emulation by **at most one machine cycle per outer-loop iteration**, even when host time has advanced by many cycles. This causes emulation speed drift/slowdown under normal scheduler jitter and rendering load.
+Using `/home/runner/work/gameboy-emulator/gameboy-emulator/GAMEBOY_TIMING_RESEARCH_REPORT.md` as the timing baseline, the primary timing fault is now clear:
 
-## Key Findings
+1. **Timers are clocked at the wrong scale (4× too slow), plus an off-by-one on DIV.**
+2. **CPU real-time stepping drops elapsed time (no catch-up), causing speed drift.**
+3. **STAT/LYC interrupt semantics are incorrect, causing timing-sensitive interrupt behavior to diverge.**
 
-1. **No catch-up when host time advances by more than one cycle**
-   - In `/home/runner/work/gameboy-emulator/gameboy-emulator/CPU.cpp`, `CPU::run()` computes `dt` and only executes one emulation step when `dt > CYCLE_TIME`.
-   - `prev_cycle` is then set directly to `current_time`, dropping any extra elapsed time instead of consuming all pending cycles.
-   - Effect: timing falls behind real time and game speed becomes unstable/slower.
+These are more impactful than the earlier diagnosis alone and better explain broad timing instability.
 
-2. **Off-by-one timing in divider increment**
-   - In `CPU::run()`, divider logic uses:
-     - `if (divider_counter++ == 256) { ... }`
-   - This triggers after 257 increments rather than 256.
-   - Effect: divider/timer-related behavior drifts from hardware timing.
+## Evidence from current implementation
 
-3. **Off-by-one timing in TIMA scheduling gate**
-   - Timer logic uses:
-     - `if ((memory.read(0xFF07) & 0x4) && timer_counter++ >= timer_control_values[...]) { ... }`
-   - Because of post-increment with `>=`, threshold behavior is shifted by one cycle.
-   - Effect: TIMA increment cadence is late, impacting game logic relying on timer interrupts.
+### A) DIV is incremented too slowly and with an off-by-one
+- File: `/home/runner/work/gameboy-emulator/gameboy-emulator/CPU.cpp`
+- Code path increments DIV when:
+  - `if (divider_counter++ == 256) { ... }`
 
-4. **Potential precision/stability concern from float microsecond thresholding**
-   - `CYCLE_TIME` is compared against `float dt` (microseconds).
-   - Float precision and threshold comparison at sub-microsecond scale can add jitter.
-   - Not the main bug, but contributes to unstable pacing.
+Problems:
+- **Unit mismatch**: emulator loop is one **M-cycle** step; DIV on DMG should tick every **64 M-cycles** (16384 Hz), not every 256.
+- **Off-by-one**: post-increment equality check makes it fire every **257** M-cycles.
 
-## Why this explains the observed timing problem
-- CPU, PPU, DIV, and TIMA all depend on cycle-accurate stepping.
-- If CPU stepping drops elapsed time, every derived subsystem runs late.
-- Additional off-by-one errors in divider/timer accumulation compound long-run drift.
+Quick check performed:
+- Expected DIV: 16384 Hz.
+- Current logic effective rate: ~4080.06 Hz (`1048576 / 257`), ~**4× too slow**.
 
-## Recommended Fix Strategy
-1. Replace single-step threshold logic with an accumulator/catch-up loop that executes as many emulated cycles as required by elapsed host time.
-2. Correct divider/timer counters to fire exactly on expected cycle boundaries.
-3. Use integer/nanosecond-based timing math (or high-precision accumulator units) to reduce floating-point jitter.
-4. Re-test with known timing ROMs (e.g., Blargg timing/timer tests) after fixes.
+### B) TIMA scheduling table is 4× too large for M-cycle stepping
+- File: `/home/runner/work/gameboy-emulator/gameboy-emulator/CPU.h`
+- Timer periods configured as:
+  - `unsigned timer_control_values[4] = { 1024, 16, 64, 256 };`
+- File: `/home/runner/work/gameboy-emulator/gameboy-emulator/CPU.cpp`
+- Used once per emulated M-cycle in:
+  - `timer_counter++ >= timer_control_values[...]`
 
-## Notes
-- PPU stepping ratio appears intentionally modeled at 4 PPU dots per CPU machine cycle (`PPU::run_cycle()` called once per CPU machine cycle and internally iterating 4 times), so the central timing issue is in CPU pacing and timer boundary handling rather than that ratio itself.
+Research baseline for DMG (M-cycles): `{256, 4, 16, 64}`.
+
+Result:
+- All four TAC frequencies are configured **4× too slow**.
+- This alone can break game logic and interrupt pacing even if CPU instruction timing were otherwise correct.
+
+### C) Real-time pacing loses elapsed host time
+- File: `/home/runner/work/gameboy-emulator/gameboy-emulator/CPU.cpp`
+- Logic:
+  - compute `dt`
+  - if `dt > CYCLE_TIME`, execute exactly one emulated M-cycle and set `prev_cycle = current_time`
+
+Problem:
+- If host scheduling delay exceeds one cycle, only one cycle is emulated and the remainder is discarded.
+- This produces drift/slowdown under normal OS jitter or render load.
+
+### D) STAT behavior is not hardware-correct and can cause interrupt timing errors
+- File: `/home/runner/work/gameboy-emulator/gameboy-emulator/PPU.cpp`
+- Current behavior includes:
+  - forcibly OR-ing STAT source bits (`0x08/0x10/0x20`) on mode transitions
+  - setting `INT_LCDSTAT` directly on transitions
+  - writing `0x40` when `LY==LYC`
+
+Problems versus hardware semantics:
+- STAT interrupt source enable bits are CPU-controlled configuration; PPU should not force-enable them.
+- LYC coincidence flag is STAT bit 2, not bit 6.
+- STAT interrupt should follow enable bits and rising-edge behavior of the combined source line.
+
+This can create false/missing interrupts and visible timing desync in games using STAT raster timing.
+
+### E) Additional timing-model gaps (secondary but important)
+- `halted` is set in `CPU::halt()` but not used in the run loop, so HALT timing behavior is effectively absent.
+- Interrupt service entry cost (5 M-cycles total on hardware) is not explicitly modeled.
+- PPU mode 3 is fixed to 172 dots (minimum) and does not model variable penalties (SCX/window/OBJ).
+
+These are not the first-order cause of the current gross timing drift, but they matter for compatibility.
+
+## Prioritized root-cause diagnosis
+
+1. **Highest impact**: timer unit mismatch (`DIV` period and `timer_control_values`) causes systemic 4× timer-rate error.
+2. **High impact**: dropped elapsed time in CPU pacing loop causes emulator speed drift/slowdown.
+3. **High compatibility impact**: incorrect STAT/LYC semantics produce interrupt timing divergence.
+4. **Secondary**: HALT/interrupt-latency/mode3-variability omissions reduce cycle accuracy.
+
+## Test activity performed for this diagnosis
+
+1. Source-level timing audit against:
+   - `/home/runner/work/gameboy-emulator/gameboy-emulator/GAMEBOY_TIMING_RESEARCH_REPORT.md`
+   - `/home/runner/work/gameboy-emulator/gameboy-emulator/CPU.cpp`
+   - `/home/runner/work/gameboy-emulator/gameboy-emulator/CPU.h`
+   - `/home/runner/work/gameboy-emulator/gameboy-emulator/PPU.cpp`
+2. Numerical timing sanity check (executed in-shell) confirming:
+   - DIV current effective rate near 4.08 kHz versus 16.384 kHz expected.
+   - TAC timing table entries all 4× expected M-cycle periods.
+3. Build attempt:
+   - `make` fails in this environment due missing SDL2 headers (`SDL2/SDL.h` not installed), so runtime ROM tests were not possible here.
+
+## Conclusion
+The timing issue is not just a minor off-by-one; it is primarily a **clock-domain scaling error** in timer/divider logic, compounded by **host-time cycle dropping** and **incorrect STAT interrupt semantics**. This revised diagnosis supersedes the earlier report and is consistent with the deeper timing research baseline.
